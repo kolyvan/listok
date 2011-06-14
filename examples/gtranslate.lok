@@ -1,0 +1,34 @@
+":";exec ./listok $0 "$@"
+
+(when (< (length *args*) 3)
+  (display "usage: gtranslate from to query\n")
+  (display " example - gtranslate en ru hello stranger\n")
+  (exit))
+
+(def from  (elt *args* 0))
+(def to    (elt *args* 1))
+(def q     (tail (tail *args*)))
+
+(def query 
+  (fold (λ (r s) (string r " " s))
+    (head q) (tail q))) 
+
+(def url
+  (string "http://ajax.googleapis.com/ajax/services/language/translate?langpair=" 
+  from "|" to "&q=" (url-encode query) "&v=1.0"))
+
+;(print url)
+
+(let ((conn (open-url url)))
+  (when conn
+    (let ((reply (read-text conn)))  
+      (close conn)
+      (let ((json (json-parse reply)))
+        ;(print json)
+        (def rd (hm-get json :responseData))
+        (if rd 
+          (display "%s\n" (hm-get rd :translatedText))
+          (display "%s\n" (hm-get json :responseDetails)))
+      ))))
+
+

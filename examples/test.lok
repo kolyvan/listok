@@ -1,0 +1,13 @@
+":";exec ./listok $0 "$@"
+
+(unless *args* 
+  (write-line "usage: test.lok number")
+  (exit)
+)
+
+(defun fact (n)     
+  (if (< n 2) 1 (* n (fact (- n 1)))))
+
+(print (fact (to-int (head *args*))))
+(terpri)
+

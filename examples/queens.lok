@@ -1,0 +1,143 @@
+":";exec ./listok $0 "$@"
+
+; example implementation of queens 
+; usage: queens 2 - show the first two of found
+; usage: queens all - show all found
+; usage: queens 1 2 3 - show first, second and third found
+; usage: queens -m - use multithreading
+
+
+(defun print-board (board)
+  (defconstant red   (string (to-char 27) "[31m"))
+  (defconstant white (string (to-char 27) "[43m"))
+  (defconstant black (string (to-char 27) "[42m"))
+  (defconstant reset (string (to-char 27) "[0m"))
+  
+  (defun print-cell (col row p)
+    (if (evenp (+ col row))
+      (display (string white red p reset))
+      (display (string black red p reset))))
+
+  (defun iter (b n)
+    (if (null b)
+      (newline)
+      (progn
+       (if (= n (head b))
+           (print-cell (length b) n " # ")
+           (print-cell (length b) n "   "))
+       (iter (tail b) n))
+      ))
+  
+  (foreach
+    (lambda (x) (iter board x))
+   '(8 7 6 5 4 3 2 1))
+      board)
+
+
+(defun can-place (board pos)
+  (defun iter (b n)
+    (if (null b)
+        t
+        (let ((p (head b)))
+          (if (= p pos)
+              nil
+              (if (= n (abs (- p pos)))
+                  nil
+                  (iter (tail b) (- n 1)))))))
+  (iter board (length board)))
+
+
+(defun gen-boards (b)
+  (defun iter (b n res)
+    (cond ((> n 8) res)
+          (t (if (can-place b n)
+               (iter b (+ n 1) (cons (append b (list n)) res))
+               (iter b (+ n 1) res)))))
+  (iter b 1 nil))
+
+
+(defun queens ()
+  (defun iter (boards n)
+  (if (= n 0)
+      boards
+      (iter
+       (flatmap gen-boards boards)
+       (- n 1))))
+  (iter (gen-boards nil) 7))
+
+
+(defun mt-queens () 
+
+  (defun part-queens (init)
+    (defun iter (boards n)
+    (if (= n 0)
+        boards
+        (iter
+         (flatmap gen-boards boards)
+         (- n 1))))
+    (iter (gen-boards init) (- 7 (length init))))
+
+  (defun compute (start end) 
+    (let (bb)
+      (doseq (n (range start end)) 
+       ;(display "compute %d\n" n)
+       (setf bb (append bb (part-queens (list n)))))
+       bb))
+
+  (spawn worker ((m (mailslot)) compute) 
+    (send m (compute 1 5)))
+
+  (def b1 (compute 5 9))
+  (def b2 (first (receive)))
+  (append b1 b2)
+)
+
+(defun print-all (bb) 
+  (doseq (b bb)
+      (print-board b)
+      (newline)))
+
+(defun print-indexes (bb ii) 
+  (doseq (i ii)
+      (display " board #%s \n" i)
+      (print-board (elt bb (to-int i)))
+      (newline)))
+
+
+;
+
+
+
+(def mthread (find "-m" *args*))
+;(def mthread t)
+
+(display " compute, please wait ..")
+(if mthread 
+  (display " multi-thread\n")
+  (display " single-thread\n"))
+
+
+(def t1 (current-time))
+
+(def bb (if mthread 
+    (mt-queens)
+    (queens)))
+;(def bb (queens))
+
+
+(def t2 (current-time))
+(def ms (+ (* 1000 (- (first t2) (first t1)))  (- (second t2) (second t1)))) 
+(display " %d found in %d ms \n" (length bb) ms )
+
+(def args  (filter (lambda (s) (/= (head s) #\-)) *args*))  ;del - switch
+(match args
+  (null)
+  ((list "all" nil) 
+    (display " show all %d found\n" (length bb))
+    (print-all bb))
+  ((list x nil) 
+    (display " show the first %s of %d found\n" x (length bb))
+    (print-all (take bb (to-int x))))
+  ((listp xs) 
+    (print-indexes bb xs))
+  )

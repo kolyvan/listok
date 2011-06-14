@@ -1,0 +1,99 @@
+/*
+	Listok is a dialect of LISP 
+	Copyright (C) 2011 Konstantin Boukreev
+	ru.kolyvan@gmail.com
+
+	This file is part of Listok.
+
+	Listok is free software; you can redistribute it and/or
+	modify it under the terms of the GNU Lesser General Public
+	License as published by the Free Software Foundation; either
+	version 3 of the License, or (at your option) any later version.
+
+	Listok is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+	Lesser General Public License for more details.
+
+	You should have received a copy of the GNU Lesser General Public License
+	along with this library. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package ru.listok
+
+object main {
+
+  def main(args: Array[String]) {
+    if (args.isEmpty)
+      REPL.run
+    else
+      run(args)
+   }
+
+  val usage = "Usage: listok [--compile file dest] | [--eval cmd] | [[--load] file [args]] "
+
+  def run(args: Array[String]) {
+   // println("args: " + args.mkString(","))
+    args.toList match {
+      case "-c" :: source :: dest => compile(source, dest.head)
+      case "--compile" :: source :: dest => compile(source, dest.head)
+
+      case "-e" :: cmd => evalCmd(cmd.mkString(" "))
+      case "--eval" :: cmd => evalCmd(cmd.mkString(" "))
+
+      case "-l" :: path :: args => loadFile(path, args)
+      case "--load" :: path :: args => loadFile(path, args)
+      case s => loadFile(s.head, s.tail)
+   }
+  }
+
+  def compile(src: String, dest: String) {
+    val l = new Listok
+    val text = scala.io.Source.fromFile(src).getLines.mkString("\n")
+    builtin.Streams.writeFile(dest, l.compile(text))
+  }
+
+  def evalCmd(cmd: String) {
+    val l = new Listok
+    println(l.eval(cmd).pp)
+  }
+
+  def loadFile(path: String, args: List[String]) {
+    val l = new Listok {
+      override def onexit(env: Env, status: Int) { java.lang.Runtime.getRuntime.exit(status) }
+    }
+    defineArgs(l, args)
+    l.load(builtin.Streams.readFile(path))
+  }
+
+  def defineArgs(listok: Listok, args: List[String]) {
+    listok.root.defineconst(Symbol("*args*"), Llist(args.map(Lstring(_))))
+  }
+
+  def eval(env: Env)(f: => Unit) =
+    try {f}
+    catch {
+      case ex: ScriptExit =>
+
+      case ParserError(msg) =>
+        println(msg)
+
+      case ex: ScriptAssert =>
+        println("assertion failed: " + ex.msg)
+        Util.printBacktrace(ex.env)
+
+      case ex: ScriptError =>
+        println("script error: " + ex.msg)
+        Util.printBacktrace(ex.env)
+
+      case ex: ListokRuntimeError =>
+        println("runtime error: " + ex.getMessage)
+        Util.printBacktrace(ex.env)
+
+      case err =>
+        println("internal error: " + err)
+    }
+
+
+
+}

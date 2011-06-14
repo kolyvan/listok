@@ -1,0 +1,9 @@
+*~
+.DS_Store
+lib_managed/
+project/boot/
+project/target/
+target/
+.idea
+*.iml
+plan

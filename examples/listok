@@ -1,0 +1,36 @@
+#!/bin/sh
+
+SOURCE=$0 
+LISTOK=../target/scala-2.9.0.1/listok_2.9.0-0.2.0.jar
+SBINARY=../lib_managed/jar/org.scala-tools.sbinary/sbinary_2.9.0/sbinary_2.9.0-0.4.0.jar
+SCALA=$SCALA_HOME/lib/scala-library.jar
+JAVA_OPTS="-Xmx256M -Xms32M"
+
+if [ ! -e $LISTOK ]; then
+  echo "warning: listok.jar not found"
+  exit 1
+fi
+
+if [ ! -e $SBINARY ]; then
+  echo "warning: sbinary.jar not found"
+  exit 1
+fi
+
+if [ ! -e $SCALA ]; then
+  echo "warning: scala-libary.jar not found"
+  exit 1
+fi
+
+if [ ! -n "$1" ]
+then
+  JLINE=/usr/local/share/java/classes/jline.jar
+  if [ -e $JLINE ]; then
+    exec java -cp .:$SCALA:$LISTOK:$SBINARY:$JLINE jline.ConsoleRunner ru.listok.main
+  else
+    exec java -cp .:$SCALA:$LISTOK:$SBINARY ru.listok.main
+  fi
+  exit 0
+fi
+
+#scala -cp $LISTOK:$LIBS ru.listok.main "$@"
+exec java $JAVA_OPTS -cp .:$SCALA:$LISTOK:$SBINARY ru.listok.main "$@"
