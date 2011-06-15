@@ -32,8 +32,9 @@ trait Host {
 
   //
 
+  def debug = false
   def redefine = false
-  var backtrace = false
+  def backtrace = debug
   def traceMode = traceList.nonEmpty
 
 

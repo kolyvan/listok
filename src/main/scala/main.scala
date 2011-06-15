@@ -34,16 +34,23 @@ object main {
 
   def run(args: Array[String]) {
    // println("args: " + args.mkString(","))
-    args.toList match {
+
+    var debug = false
+    val l = args.toList.filter {
+      case "-debug" | "-d" => debug = true; false
+      case _ => true
+    }
+
+    l match {
       case "-c" :: source :: dest => compile(source, dest.head)
       case "--compile" :: source :: dest => compile(source, dest.head)
 
       case "-e" :: cmd => evalCmd(cmd.mkString(" "))
       case "--eval" :: cmd => evalCmd(cmd.mkString(" "))
 
-      case "-l" :: path :: args => loadFile(path, args)
-      case "--load" :: path :: args => loadFile(path, args)
-      case s => loadFile(s.head, s.tail)
+      case "-l" :: path :: args => loadFile(path, args, debug)
+      case "--load" :: path :: args => loadFile(path, args, debug)
+      case s => loadFile(s.head, s.tail, debug)
    }
   }
 
@@ -55,22 +62,23 @@ object main {
 
   def evalCmd(cmd: String) {
     val l = new Listok
-    println(l.eval(cmd).pp)
+    guard{ println(l.eval(cmd).pp) }
   }
 
-  def loadFile(path: String, args: List[String]) {
+  def loadFile(path: String, args: List[String], isdebug: Boolean) {
     val l = new Listok {
+      override val debug = isdebug
       override def onexit(env: Env, status: Int) { java.lang.Runtime.getRuntime.exit(status) }
     }
     defineArgs(l, args)
-    l.load(builtin.Streams.readFile(path))
+    guard{ l.load(builtin.Streams.readFile(path)) }
   }
 
   def defineArgs(listok: Listok, args: List[String]) {
     listok.root.defineconst(Symbol("*args*"), Llist(args.map(Lstring(_))))
   }
 
-  def eval(env: Env)(f: => Unit) =
+  def guard(f: => Unit) =
     try {f}
     catch {
       case ex: ScriptExit =>

@@ -107,12 +107,15 @@ object Common extends Helpers {
   }
 
   def func_break(env: Env, l: List[Lcommon]): Lcommon = {
-    mustEqual(env, l, 1)
-    val message = l.head.getString(env)
-    env.host.onbreak(env, message)
+    if (env.host.debug) {
+      mustEqual(env, l, 1)
+      val message = l.head.getString(env)
+      env.host.onbreak(env, message)
+    }
     Lnil
   }
 
+  /*
   def func_assert(env: Env, l: List[Lcommon]): Lcommon = {
     notLess(env, l, 1)
     if (!Util.isTrue(l.head)) {
@@ -121,6 +124,7 @@ object Common extends Helpers {
     }
     Lnil
   }
+  */
 
   def func_trace(env: Env, l: List[Lcommon]): Lcommon = {
     notLess(env, l, 1)
@@ -465,7 +469,7 @@ object Common extends Helpers {
     Lfunction(func_exit, 'exit),
     Lfunction(func_error, 'error),
     Lfunction(func_break, 'break),
-    Lfunction(func_assert, 'assert),
+  //  Lfunction(func_assert, 'assert),
     Lfunction(func_trace, 'trace),
     Lfunction(func_untrace, 'untrace),
     Lfunction(func_curry, 'curry),

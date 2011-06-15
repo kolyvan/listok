@@ -7,7 +7,9 @@ import org.scalatest.FunSuite
 class CommonTest extends FunSuite {
 
   def listok = new Listok  {
-     override def onload(env: Env, source: String) = source match {
+    var debug_ = false
+    override def debug = debug_
+    override def onload(env: Env, source: String) = source match {
       case "list" => Listok.load(env, new java.io.ByteArrayInputStream("(list 1 2 3)".getBytes))
       case _ => Lnil
     }
@@ -401,6 +403,14 @@ class CommonTest extends FunSuite {
     (def add1 (curry + 1))
     (add1 2)
     """)}
+  }
+
+  test("assert") {
+    val l = listok
+    l.debug_ = true
+    intercept[ScriptAssert]{l.eval("""(assert nil "test assert")""")}
+    l.debug_ = false
+    expect(Lnil){l.eval("""(assert nil "test assert")""")}
   }
 }
 

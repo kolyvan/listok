@@ -37,11 +37,12 @@ object REPL extends Host {
   //  Console.in
   //}
 
+  override val debug = true
   override val redefine = true
 
   def run() {
     val env = Env.root(this)
-    this.backtrace = true
+    // this.backtrace = true
     var ok = true
     println("ru.listok.repl\npress ctrl+d to exit\n")
     var cmd = ""

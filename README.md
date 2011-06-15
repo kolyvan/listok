@@ -153,21 +153,16 @@ It's a Scala-based and need in scala-library.jar to run.
 
 ## limitation
 
-- argument lists - no &key or &options but only &rest parameter	
-	
-## known bugs
-
-- possible deadlock by using thread-wait-init
-- in macro definition you must use backquote instead of quote 
+- in argument lists no &key or &options but only &rest parameter
+- in macro definition use backquote instead of quote
+- unable to use `def` inside `do` forms
 
 ## planned in nearest future
-	
-- debug switch (for assert, break and backtrace)
+
 - generic methods
-- byte type
 - values	
 - trivial optimization like constant folding
-- numerical tower (double, long, etc)
+- numerical tower (byte, double, long, etc)
 
 ## Build instructions
 

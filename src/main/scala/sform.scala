@@ -283,9 +283,23 @@ object SpecialForms {
     Lsymbol(name)
   }
 
+  def form_assert(env: Env, l: List[Lcommon]): Lcommon = {
+    if (env.host.debug) {
+      if (l.length < 1)
+        throw SyntaxError("invalid number of elements in ASSERT: " + Util.pp(l), env)
+      if (!Util.isTrue(l.head.eval(env))) {
+        val msg = if (l.length > 1)
+          l.head.pp + " " + l(1).pp
+        else
+          l.head.pp
+        env.host.onassert(env, msg)
+      }
+    }
+    Lnil
+  }
+
   def make(name: Symbol) = name match {
     case 'def => Lsform(form_define _, name)
-  //  case 'defparameter => Lsform(form_defparameter _, name)
     case 'defconstant => Lsform(form_defconstant _, name)
     case 'defun => Lsform(form_defun _, name)
     case 'setf => Lsform(form_setf _, name)
@@ -297,6 +311,7 @@ object SpecialForms {
     case 'spawn => Lsform(Concurrent.form_spawn _, name)
     case 'match => Lsform(form_match _, name)
     case 'defstruct => Lsform(form_defstruct _, name)
+    case 'assert => Lsform(form_assert _, name)
     case _ => bugcheck("unable make unknown sform: " + name)
   }
 

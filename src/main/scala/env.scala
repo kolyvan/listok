@@ -239,10 +239,12 @@ class Env ( val name: Symbol,
 
   def pp ():String = {
     if (values.isEmpty)
-      "(env " + name + " " + hashCode + ")"
+      // "(env " + name + " " + hashCode + ")"
+      "(env " + name + " " + ")"
     else {
       val sb = new StringBuilder
-      sb ++= "(env " + name + " " + hashCode
+      // sb ++= "(env " + name + " " + hashCode
+      sb ++= "(env " + name + " "
       values.foreach { p =>
         if (!p.readonly) {
           sb ++= " "
