@@ -23,7 +23,6 @@ package ru.listok
 
 import sbinary._
 import collection.mutable.ArraySeq
-import java.lang.Boolean
 
 //import DefaultProtocol._
 import Operations._

@@ -20,7 +20,6 @@
  */
 package ru.listok
 
-import java.lang.Boolean
 
 object Listok {
 
