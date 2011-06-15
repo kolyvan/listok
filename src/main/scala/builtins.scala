@@ -411,25 +411,6 @@ object Common extends Helpers {
     Lstring(s.format(l.tail.map(_.getAny):_*))
   }
 
-  def func_display(env: Env, l: List[Lcommon]): Lcommon = {
-    if (l.nonEmpty) {
-      val s = l.head.getString(env)
-      Console.printf(s, l.tail.map(_.getAny):_*)
-    }
-    else {
-      Console.println("")
-    }
-    Lnil
-  }
-
-  def func_current_time(env: Env, l: List[Lcommon]): Lcommon = {
-    val ms = System.currentTimeMillis()
-    Lpair(Lint((ms / 1000).toInt), Lint((ms % 1000).toInt))
-  }
-
-  def func_current_directory(env: Env, l: List[Lcommon]): Lcommon = {
-    Lstring(System.getProperty("user.dir"))
-  }
 
 
   def func_json_parse(env: Env, l: List[Lcommon]): Lcommon = {
@@ -473,9 +454,6 @@ object Common extends Helpers {
     Lfunction(func_trace, 'trace),
     Lfunction(func_untrace, 'untrace),
     Lfunction(func_curry, 'curry),
-    Lfunction(func_display, 'display),
-    Lfunction(func_current_time, Symbol("current-time")),
-    Lfunction(func_current_directory, Symbol("current-directory")),
     Lfunction(func_json_parse, Symbol("json-parse")),
 
     Lfunction(func_tostr, Symbol("to-str")),
@@ -512,5 +490,6 @@ object Common extends Helpers {
     Lfunction(func_macroexpand, 'macroexpand)
 
   )
+
 
 }

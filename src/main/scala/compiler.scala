@@ -23,6 +23,7 @@ package ru.listok
 
 import sbinary._
 import collection.mutable.ArraySeq
+import java.lang.Boolean
 
 //import DefaultProtocol._
 import Operations._
@@ -77,12 +78,11 @@ object Compiler extends DefaultProtocol {
     }
   }
 
-  def compile(forms: List[Lcommon], env: Env = null) =  {
-    if (env == null)
-      toByteArray(forms)
-    else
-      toByteArray(Macro.macroexpand(env, forms))
-
+  def compile(forms: List[Lcommon], env: Env = null, optimize: Boolean = false) =  {
+    var p = if (env != null) Macro.macroexpand(env, forms) else forms
+    if (optimize)
+      p = Optimize.run(p)
+    toByteArray(p)
   }
 
   def load(bytes: Array[Byte]): List[Lcommon] = {

@@ -292,6 +292,7 @@ object Env {
     val b = ArrayBuffer.newBuilder[EnvEntry]
 
     builtin.Common.all.foreach      { x => b += EnvEntry(x.name, x, true) }
+    builtin.Sys.all.foreach         { x => b += EnvEntry(x.name, x, true) }
     builtin.Numbers.all.foreach     { x => b += EnvEntry(x.name, x, true) }
     builtin.Sequences.all.foreach   { x => b += EnvEntry(x.name, x, true) }
     builtin.Streams.all.foreach     { x => b += EnvEntry(x.name, x, true) }

@@ -160,8 +160,7 @@ It's a Scala-based and need in scala-library.jar to run.
 ## planned in nearest future
 
 - generic methods
-- values	
-- trivial optimization like constant folding
+- values
 - numerical tower (byte, double, long, etc)
 
 ## Build instructions
@@ -182,4 +181,5 @@ To run REPL:
 To run examples:
 		
 	cd examples
-	./queens.lok
+	./queens.lok all
+	./gtranslate.lok en ru hello

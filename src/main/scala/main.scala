@@ -36,14 +36,16 @@ object main {
    // println("args: " + args.mkString(","))
 
     var debug = false
+    var optimize = false
     val l = args.toList.filter {
-      case "-debug" | "-d" => debug = true; false
+      case "--debug" | "-d" => debug = true; false
+      case "--optimize" | "-o" => optimize = true; false
       case _ => true
     }
 
     l match {
-      case "-c" :: source :: dest => compile(source, dest.head)
-      case "--compile" :: source :: dest => compile(source, dest.head)
+      case "-c" :: source :: dest => compile(source, dest.head, optimize)
+      case "--compile" :: source :: dest => compile(source, dest.head, optimize)
 
       case "-e" :: cmd => evalCmd(cmd.mkString(" "))
       case "--eval" :: cmd => evalCmd(cmd.mkString(" "))
@@ -54,10 +56,12 @@ object main {
    }
   }
 
-  def compile(src: String, dest: String) {
+  def compile(src: String, dest: String, optimize: Boolean) {
+    if (optimize)
+      println("warning: optimization is an experimental feature, use with caution")
     val l = new Listok
     val text = scala.io.Source.fromFile(src).getLines.mkString("\n")
-    builtin.Streams.writeFile(dest, l.compile(text))
+    builtin.Streams.writeFile(dest, l.compile(text, optimize))
   }
 
   def evalCmd(cmd: String) {

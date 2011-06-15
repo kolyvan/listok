@@ -24,7 +24,7 @@ package ru.listok
 import collection.mutable.ArrayBuffer
 
 // constant folding optimization
-// warning: incomplete code !!!
+// warning: experimental feature and is badly tested
 
 object Optimize extends Host {
 
@@ -41,8 +41,6 @@ object Optimize extends Host {
     case Lpair(a,b) => optimized(a) && optimized(b)
     case _: Llazyseq => false
     case l: Lseq => l.seq.forall(optimized)
-    //case _: Lsymbol => true /// ?????
-    //case _: Lhashtable => // ???
 
     case _ => false
   }
@@ -54,56 +52,41 @@ object Optimize extends Host {
 
     def atom(p: Lcommon): Lcommon = p match {
 
-      case Llist(Nil) => Lnil
+      // case Llist(Nil) => Llist(Nil) //Lnil
 
       case l:Llist =>
 
-       // log("try eval: " + l.pp)
+        if (mustSkip(l.seq))
+          l
+        else {
 
-        val xs = l.seq.map {atom _}
+          val xs = l.seq.map {atom _}
 
-        val l2 = Llist(xs)
+          val l2 = Llist(xs)
 
-        if (xs.tail.forall(optimized) ) {
+          if (xs.tail.forall(optimized) ) {
 
-          (try {
-            //Some(Listok.lapply(env, xs.head, xs.tail))
-
-            xs.head match {
-              //case sf: Lsform => sf.lapply(env, xs.tail)
-              case s: Lsymbol =>
-                s.eval(env) match {
-                  case fn: Lfunction =>
-                    log("try " + Util.pp(xs))
-                    Some(fn.lapply(env, xs.tail))
-                  case _ => None
+            (try { Some(Listok.lapply(env, xs.head, xs.tail)) }
+            catch {
+              case ex =>
+              //  log("exception " + ex.toString + " during optimizing " + l2.pp)
+                None
+            }) match {
+              case Some(r) =>
+                if (optimized(r)) {
+                //  log("optimize " + l2.pp + " to " + r.pp)
+                  if (r.isInstanceOf[Llist])
+                    return Lquote(r)
+                  else
+                    return r
                 }
-              case lm: Llambda =>
-                lm.eval(env) match {
-                  case fn: Lfunction =>
-                    log("try " + Util.pp(xs))
-                    Some(fn.lapply(env, xs.tail))
-                  case _ => None
-                }
-              case _ => None
+                //else log(" unable opt for " + l2.pp)
+              case _ =>
             }
+          } // else log(" skip opt for " + l2.pp)
 
-          }
-          catch {
-            case ex =>
-              log("exception " + ex.toString + " during optimizing " + l2.pp)
-              None
-          }) match {
-            case Some(r) =>
-              if (optimized(r)) {
-                log("optimize " + l2.pp + " to " + r.pp)
-                return r
-              }
-            case _ =>
-          }
+          l2
         }
-
-        l2
 
       case Llambda(ll, body, name) => Llambda(ll, list(body), name)
 
@@ -112,7 +95,25 @@ object Optimize extends Host {
 
     def list(l: List[Lcommon]): List[Lcommon] = l map { atom _ }
 
-    list(forms)
+    val r = list(forms)
+
+   // log("optimize result - forms before: " + count(forms) + " after: " + count(r))
+   // log("before\n" + Util.pp(forms, "", "\n", ""))
+   // log("after\n"  + Util.pp(r, "", "\n", ""))
+   // log("")
+
+    r
+  }
+
+  def mustSkip(xs: List[Lcommon]) = {
+    if (xs.isEmpty)
+      true
+    else {
+      xs.head match {
+        case sf: Lsform if (sf.name == 'match || sf.name == 'assert || sf.name == 'spawn) => true
+        case _ => false
+      }
+    }
   }
 
   def root = {
@@ -121,13 +122,7 @@ object Optimize extends Host {
     builtin.Common.all.foreach      { x => b += EnvEntry(x.name, x, true) }
     builtin.Numbers.all.foreach     { x => b += EnvEntry(x.name, x, true) }
     builtin.Sequences.all.foreach   { x => b += EnvEntry(x.name, x, true) }
-  //  builtin.Streams.all.foreach     { x => b += EnvEntry(x.name, x, true) }
     builtin.Regex.all.foreach       { x => b += EnvEntry(x.name, x, true) }
-
-    // Macro.list.foreach       { x => b += EnvEntry(x.name, x, true) }
-    // Concurrent.list.foreach  { x => b += EnvEntry(x.name, x, true) }
-
-    // no output
 
      new Env('root, null, b.result, this, new FakeMailslot) {
        override protected def defineimpl(symbol: Symbol, value: Lcommon, mutable: Boolean) =
@@ -140,6 +135,14 @@ object Optimize extends Host {
   class FakeMailslot extends Mailslot('fake) {
     override def receive(timeout: Long) = throw NotAllowed("deny maislot")
     override def send(msg: Lcommon, from: Lmailslot)  = throw NotAllowed("deny maislot")
-}
+  }
 
+  def count(l: List[Lcommon]): Int = {
+    var n = 0
+    Util.traverseTree(l) {
+      case Llambda(ll, body, name) => n += count(body)
+      case _ => n += 1
+    }
+    n
+  }
 }

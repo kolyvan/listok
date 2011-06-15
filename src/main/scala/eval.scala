@@ -20,6 +20,8 @@
  */
 package ru.listok
 
+import java.lang.Boolean
+
 object Listok {
 
   def lapply(env: Env, f: Lcommon, args: List[Lcommon]): Lcommon = f match {
@@ -80,10 +82,11 @@ object Listok {
   // val bytecodesign = Array(108.toByte, 105.toByte, 115.toByte, 116.toByte, 111.toByte, 107.toByte, 48.toByte, 49.toByte)
   private lazy val bytecodesign = Array('l'.toByte, 'i'.toByte, 's'.toByte, 't'.toByte, 'o'.toByte, 'k'.toByte, '0'.toByte, '1'.toByte)
 
-  def compile(env: Env, forms: List[Lcommon]): Array[Byte] =
-    Array.concat(bytecodesign, Compiler.compile(forms, env))
+  def compile(env: Env, forms: List[Lcommon], optimize: Boolean): Array[Byte] =
+    Array.concat(bytecodesign, Compiler.compile(forms, env, optimize))
 
-  def compile(env: Env, text: String): Array[Byte] = compile(env, parse(text))
+  def compile(env: Env, text: String, optimize: Boolean): Array[Byte] =
+    compile(env, parse(text), optimize)
 
   def load(env: Env, in: java.io.InputStream): Lcommon = eval(env, loadAst(in))
 
@@ -109,8 +112,8 @@ class Listok extends Host {
   def eval(text: String) = Listok.eval(root, text)
   def load(in: java.io.InputStream) = Listok.load(root, in)
   def load(bytes: Array[Byte]) = Listok.eval(root, Listok.loadAst(bytes))
-  def compile(forms: List[Lcommon]) = Listok.compile(root, forms)
-  def compile(text: String) = Listok.compile(root, text)
+  def compile(forms: List[Lcommon], optimize: Boolean) = Listok.compile(root, forms, optimize)
+  def compile(text: String, optimize: Boolean) = Listok.compile(root, text, optimize)
 }
 
 

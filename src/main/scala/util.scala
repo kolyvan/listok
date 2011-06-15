@@ -31,17 +31,6 @@ object Util {
     val sb = new StringBuilder
     sb ++= prefix
 
-    /*
-    l match {
-      case Nil =>
-      case x::xs =>
-        sb ++= x.pp
-        xs.foreach { x =>
-          sb ++= sep
-          sb ++= x.pp
-        }
-    }
-    */
     if (l.nonEmpty) {
       sb ++= l.head.pp
       l.tail.foreach { x =>
@@ -180,7 +169,7 @@ object Util {
     list(l)
   }
 
-  def traverseTree(l: List[Lcommon])(fn: (Lcommon) => Lcommon ) {
+  def traverseTree(l: List[Lcommon])(fn: (Lcommon) => Unit ) {
 
     def atom(p: Lcommon) { p match {
       case Llist(Nil) =>
