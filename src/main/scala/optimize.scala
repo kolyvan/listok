@@ -137,11 +137,9 @@ object Optimize extends Host {
 
   case class NotAllowed(msg: String) extends RuntimeException(msg)
 
-  class FakeMailslot extends Mailslot {
-    val name = 'fake
-    def tryReceive(timeout: Long)(f: () => Option[Message]) = throw NotAllowed("deny maislot")
-    def resume()  = throw NotAllowed("deny maislot")
-
+  class FakeMailslot extends Mailslot('fake) {
+    override def receive(timeout: Long) = throw NotAllowed("deny maislot")
+    override def send(msg: Lcommon, from: Lmailslot)  = throw NotAllowed("deny maislot")
 }
 
 }

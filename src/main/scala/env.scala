@@ -311,6 +311,6 @@ object Env {
   }
 
   def root(host: Host) =
-    apply('root, Env.global(host), new ThreadMailslot('root))
+    apply('root, Env.global(host), new Mailslot('root))
 
 }

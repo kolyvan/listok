@@ -17,7 +17,8 @@ class ThreadTest extends FunSuite {
     """)}
   }
 
-   test("vars") {
+
+  test("vars") {
     expect(Lint(42)){listok.eval("""
     (def x 41)
     (def th (spawn worker (x)
@@ -31,6 +32,7 @@ class ThreadTest extends FunSuite {
     (join th)
     """)}
   }
+
 
   test("mailslot") {
     expect(Lstring("hello")){listok.eval(
@@ -46,7 +48,6 @@ class ThreadTest extends FunSuite {
 
   }
 
- if (false)
   test("mailslot 2") {
     expect(Lint(43)){listok.eval(
     """
@@ -55,7 +56,7 @@ class ThreadTest extends FunSuite {
       (def x (receive))
       (send (second x) (incr (first x)))
       :ok))
-    (thread-wait-init th) ; for avoiding race cond
+    (thread-wait-init th 10) ; for avoiding race cond
     (send th 42)
     (first (receive))
     """)}
@@ -91,4 +92,5 @@ class ThreadTest extends FunSuite {
     """
     )}
   }
+
 }

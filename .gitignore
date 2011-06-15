@@ -4,6 +4,7 @@ lib_managed/
 project/boot/
 project/target/
 target/
+tmp/
 .idea
 *.iml
 plan

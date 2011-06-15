@@ -26,96 +26,70 @@ import scala.collection.mutable.{Queue => MQueue}
 import java.lang.{Thread}
 
 
-final class Monitor {
-  private var suspended = false
 
-  def suspend(timeout : Long) = synchronized {
+class Mailslot(val name: Symbol) {
+
+  type Message = Pair[Lcommon, Lmailslot]
+
+  protected var messages = new MQueue[Message]
+
+  def receive(timeout: Long): Option[Message] = synchronized {
+
+    def waitTime(timeout: Long, endtime: Long) =
+      if (timeout > 0)
+        (endtime - System.currentTimeMillis).max(0)
+      else
+        timeout
+
+    var stillwait = timeout
+    val endtime = timeout + System.currentTimeMillis
+
+    while (true) {
+      if (messages.nonEmpty)
+        return Some(messages.dequeue)
+
+      stillwait = waitTime(stillwait, endtime)
+      if (!waitMsg(stillwait)) // false is timeout
+        return None
+    }
+    None
+  }
+
+  def send(msg: Lcommon, from: Lmailslot) = synchronized {
+    messages += (msg -> from)
+    msg
+    notifyAll()
+  }
+
+  def size = synchronized { messages.length }
+
+  protected def waitMsg(timeout: Long):Boolean = synchronized {
+
     if (timeout == 0) {
       wait(0)
     }
+    else if (timeout < 0) {
+      while (messages.isEmpty)
+        wait()
+    }
     else {
-      suspended = true
-      if (timeout < 0) {
-        while (suspended)
-          wait()
-      }
-      else {
-        val start = System.currentTimeMillis
-        val end = start + timeout
-        while (suspended && (System.currentTimeMillis < end)) {
-          wait(end - start)
+      var now = System.currentTimeMillis
+      val end = now + timeout
+      while (messages.isEmpty) {
+        wait(end - now)
+        now = System.currentTimeMillis
+        if (messages.isEmpty && now >= end) {
+          return false   // timeout
         }
       }
     }
 
+    messages.nonEmpty
   }
-  def resume() = synchronized {
-    notify()
-    suspended = false
-  }
-}
-
-trait Mailslot {           // thread or coroutine
-
-  def name: Symbol
-
-  type Message = Pair[Lcommon, Lmailslot]
-
-  protected val locker = new scala.concurrent.Lock
-
-  protected var messages = new MQueue[Message]
-
-  protected def pop(): Option[Message] = {
-    try {
-      locker.acquire
-      if (messages.isEmpty)
-        None
-      else
-        Some(messages.dequeue)
-
-    } finally  { locker.release }
-  }
-
-  protected def push(msg: Lcommon, from: Lmailslot) = {
-    try {
-      locker.acquire
-      messages += (msg -> from)
-      msg
-    } finally  { locker.release }
-  }
-
-  def receive(timeout: Long = -1) =
-    tryReceive(timeout){ pop }
-
-
-  def send(msg: Lcommon, from: Lmailslot) {
-    push(msg, from)
-    resume
-  }
-
-  def tryReceive(timeout: Long)(f: () => Option[Message]) : Option[Message]
-  def resume(): Unit
-
-  def size = messages.length
 
 }
 
-final class ThreadMailslot(val name: Symbol) extends Mailslot {
 
-  protected val monitor = new Monitor
-
-  def tryReceive(timeout: Long)(f: () => Option[Message]) =
-    f() match {
-      case None =>
-        monitor.suspend(timeout)
-        f()
-      case x => x
-    }
-
-
-  def resume() = monitor.resume
-
-}
 
 object Concurrent {
 
@@ -149,8 +123,10 @@ object Concurrent {
     if (l.length < 1)
       throw SyntaxError("Invalid number of argument: " + l.length, env)
 
+    val timeout = if (l.length == 2) l(1).getInt(env) else -1
+
     l.head match {
-      case th: Lthread => th.thread.waitInit(); Lnil
+      case th: Lthread => th.thread.waitInit(timeout); Lnil
       case err => throw TypeError("The value "+ err +" is not of type THREAD", env)
     }
   }
@@ -306,6 +282,24 @@ object Threads {
 
 final class ThreadWrapper(val name: Symbol, env: Env, vars: List[Lcommon], forms: List[Lcommon]) extends Thread(Util.pp(name)) {
 
+  private class Sem {
+    private var signal_ = false
+
+    def waitSignal(timeout: Long) = synchronized {
+      if (!signal_)  {
+        if (timeout < 0)
+          wait()
+        else
+          wait(timeout)
+      }
+    }
+
+    def signal() = synchronized {
+      signal_ = true
+      notify()
+    }
+  }
+
   private var tenv: Env = null
   private var result: Lcommon = Lnil
 
@@ -334,23 +328,22 @@ final class ThreadWrapper(val name: Symbol, env: Env, vars: List[Lcommon], forms
       case err => throw TypeError("Mailformed thread vars : "+ err.pp, env)
     }
 
-    Env('thread, env.getGlobal(), ll.result, args.result, new ThreadMailslot(name))
+    Env('thread, env.getGlobal(), ll.result, args.result, new Mailslot(name))
   }
 
-  private val lock = new scala.concurrent.Lock
+  private val sem = new Sem
 
   override def run {
     tenv = Env(name, root)
-    lock.release    // ok, init is complete
+    sem.signal    // ok, init is complete
     result = Listok.eval(tenv, forms)
   }
 
   override def start {
-    lock.available = false
     super.start
   }
 
-  def waitInit() = lock.acquire
+  def waitInit(timeout: Long) = sem.waitSignal(timeout)
 
   def getMailslot = tenv.getMailslot // race condition here, must call waitInit before
   def getResult = result
