@@ -50,9 +50,9 @@ object main {
       case "-e" :: cmd => evalCmd(cmd.mkString(" "))
       case "--eval" :: cmd => evalCmd(cmd.mkString(" "))
 
-      case "-l" :: path :: args => loadFile(path, args, debug)
-      case "--load" :: path :: args => loadFile(path, args, debug)
-      case s => loadFile(s.head, s.tail, debug)
+      case "-l" :: path :: largs => loadFile(path, largs, debug)
+      case "--load" :: path :: largs => loadFile(path, largs, debug)
+      case s => println(usage) // loadFile(s.head, s.tail, debug)
    }
   }
 

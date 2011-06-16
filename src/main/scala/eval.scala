@@ -71,9 +71,14 @@ object Listok {
   }
 
   private def dropComments(text: String) = text.split('\n') map { s =>
-      s.indexOf(';') match {
+      s.lastIndexOf(';') match {
         case -1 => s
-        case n => s.substring(0, n)
+        case n =>
+          val ss = s.substring(0, n)
+          if (0 == (ss.count(_ == '"') % 2))
+            ss
+          else
+            s // in case of ";"
       }
     } mkString("\n")
 
