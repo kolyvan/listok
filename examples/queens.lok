@@ -6,17 +6,14 @@
 ; usage: queens 1 2 3 - show first, second and third found
 ; usage: queens -m - use multithreading
 
+(load "ansicode.lokc" :ansi)
 
 (defun print-board (board)
-  (defconstant red   (string (to-char 27) "[31m"))
-  (defconstant white (string (to-char 27) "[43m"))
-  (defconstant black (string (to-char 27) "[42m"))
-  (defconstant reset (string (to-char 27) "[0m"))
   
   (defun print-cell (col row p)
     (if (evenp (+ col row))
-      (display (string white red p reset))
-      (display (string black red p reset))))
+      (display (string ansi:bg-white ansi:red p ansi:reset))
+      (display (string ansi:bg-black ansi:red p ansi:reset))))
 
   (defun iter (b n)
     (if (null b)

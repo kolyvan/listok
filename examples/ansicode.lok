@@ -1,0 +1,43 @@
+; ansi code
+; taken from github.com/rubyworks/ans
+
+
+(defconstant reset      (string (to-char 27) "[0m"))
+(defconstant bold       (string (to-char 27) "[1m"))
+(defconstant dark       (string (to-char 27) "[2m"))
+;(defconstant italic     (string (to-char 27) "[3m"))
+(defconstant underline  (string (to-char 27) "[4m"))
+(defconstant blink      (string (to-char 27) "[5m"))
+(defconstant negative   (string (to-char 27) "[7m"))
+(defconstant concealed  (string (to-char 27) "[8m"))
+
+(defconstant black      (string (to-char 27) "[30m"))
+(defconstant red        (string (to-char 27) "[31m"))
+(defconstant green      (string (to-char 27) "[32m"))
+(defconstant yellow     (string (to-char 27) "[33m"))
+(defconstant blue       (string (to-char 27) "[34m"))
+(defconstant magenta    (string (to-char 27) "[35m"))
+(defconstant cyan       (string (to-char 27) "[36m"))
+(defconstant white      (string (to-char 27) "[37m"))
+
+
+(defconstant bg-black   (string (to-char 27) "[40m"))
+(defconstant bg-red     (string (to-char 27) "[41m"))
+(defconstant bg-green   (string (to-char 27) "[42m"))
+(defconstant bg-yellow  (string (to-char 27) "[43m"))
+(defconstant bg-blue    (string (to-char 27) "[44m"))
+(defconstant bg-magenta (string (to-char 27) "[45m"))
+(defconstant bg-cyan    (string (to-char 27) "[46m"))
+(defconstant bg-white   (string (to-char 27) "[47m"))
+
+(defconstant save       (string (to-char 27) "[s"))
+(defconstant restore    (string (to-char 27) "[u"))
+(defconstant clr-line   (string (to-char 27) "[K"))
+(defconstant clr-screen (string (to-char 27) "[2J"))
+
+(defun right (n)  (string (to-char 27) "[" (to-str n) "C"))
+(defun left (n)   (string (to-char 27) "[" (to-str n) "D"))
+(defun up (n)     (string (to-char 27) "[" (to-str n) "A"))
+(defun down (n)   (string (to-char 27) "[" (to-str n) "B"))
+(defun move (l c) (string (to-char 27) "[" (to-str l) ";" (to-str c) "H"))
+
