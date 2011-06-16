@@ -46,10 +46,15 @@ object Sys extends Helpers {
     Lstring(System.getProperty("user.dir"))
   }
 
+  def func_system_name(env: Env, l: List[Lcommon]): Lcommon = {
+    Lstring(System.getProperty("os.name"))
+  }
+
 
   val all = List (
     Lfunction(func_display, 'display),
     Lfunction(func_current_time, Symbol("current-time")),
-    Lfunction(func_current_directory, Symbol("current-directory"))
+    Lfunction(func_current_directory, Symbol("current-directory")),
+    Lfunction(func_system_name, Symbol("system-name"))
   )
 }
