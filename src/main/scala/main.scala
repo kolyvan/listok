@@ -93,19 +93,39 @@ object main {
       case ex: ScriptAssert =>
         println("assertion failed: " + ex.msg)
         Util.printBacktrace(ex.env)
+         if (ex.env.host.debug)
+          rundebug(ex.env)
 
       case ex: ScriptError =>
         println("script error: " + ex.msg)
         Util.printBacktrace(ex.env)
+         if (ex.env.host.debug)
+          rundebug(ex.env)
 
       case ex: ListokRuntimeError =>
         println("runtime error: " + ex.getMessage)
         Util.printBacktrace(ex.env)
+        if (ex.env.host.debug)
+          rundebug(ex.env)
 
       case err =>
         println("internal error: " + err)
     }
 
-
+  def rundebug(env: Env) {
+    println(" debug mode, type ctrl+d to exit")
+    var ok = true
+    while (ok) {
+      readLine("debug> ") match {
+        case s: String => {
+          try { println(Listok.eval(env, s).pp) }
+          catch {
+            case e => println(e)
+          }
+        }
+        case _ => ok = false
+      }
+    }
+  }
 
 }

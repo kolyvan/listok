@@ -322,8 +322,15 @@ class SeqTest extends FunSuite {
     expect(Lpair(Lnil, Lnil)){listok.eval("(partition (lambda (x) t) nil)")}
     expect(Lpair(LL(Lint(2), Lint(3)),LL(Lint(0), Lint(1))))
       {listok.eval("(partition (lambda (x) (> x 1)) '(0 2 1 3))")}
+  }
 
-
+  test("search") {
+    expect(Lint(0))(listok.eval("(search nil nil)"))
+    expect(Lint(0))(listok.eval("(search nil '(1))"))
+    expect(Lnil)(listok.eval("(search '(1) nil)"))
+    expect(Lint(1))(listok.eval("(search '(2) '(1 2 3))"))
+    expect(Lint(3))(listok.eval("(search \"bar\" \"foobar\" )"))
+    expect(Lnil)(listok.eval("(search '(2 4) '(1 2 3))"))
   }
 }
 

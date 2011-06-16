@@ -370,6 +370,16 @@ object Sequences extends Helpers {
     }
   }
 
+  def func_search(env: Env, args: List[Lcommon]): Lcommon = {
+    mustEqual(env, args, 2)
+    val t = args(0).castSeq(env).seq
+    val s = args(1).castSeq(env).seq
+    s.indexOfSlice(t) match {
+      case -1 => Lnil
+      case n => Lint(n)
+    }
+  }
+
   // hashmap
   def func_hashmap (env: Env, args: List[Lcommon]): Lcommon = {
     Lhashmap(Map.empty).make(args)
@@ -525,6 +535,7 @@ object Sequences extends Helpers {
     Lfunction(func_flatmap, 'flatmap),
     Lfunction(func_filter, 'filter),
     Lfunction(func_partition, 'partition),
+    Lfunction(func_search, 'search),
 
     // hashmap
     Lfunction(func_hashmap, 'hashmap),
