@@ -1,4 +1,4 @@
-":";exec ./listok $0 "$@"
+":";exec ./listok -l $0 "$@"
 
 (when (< (length *args*) 3)
   (display "usage: gtranslate from to query\n")

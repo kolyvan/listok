@@ -1,4 +1,4 @@
-":";exec ./listok $0 "$@"
+":";exec ./listok -l $0 "$@"
 
 (unless *args* 
   (write-line "usage: test.lok number")
