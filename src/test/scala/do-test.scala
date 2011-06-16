@@ -79,6 +79,14 @@ class DoTest extends FunSuite {
        l
        """
      )}
+     expect(Lint(3)){listok.eval(
+       """
+       (def n 3)
+       (def r 0)
+       (dotimes (i n) (setf r (incr r)))
+       r
+       """
+     )}
    }
 
 }

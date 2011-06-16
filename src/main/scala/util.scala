@@ -148,7 +148,15 @@ object Util {
           else
             sb.append(ch)
 
-        case _ =>
+        case 'e' =>
+          if (backslash == 1) {
+            backslash = 0
+            sb.append(27.toChar) // escape \033
+          }
+          else
+            sb.append(ch)
+
+       case _ =>
           sb.append(ch)
       }
     }

@@ -74,20 +74,22 @@ object Macro {
     }
 
     n match {
-      case s:Lsymbol =>
+      case _:Lsymbol =>
       case _ => throw TypeError("DO step variable is not a symbol: " + n.pp, env)
     }
 
-    num match {
-      case i:Lint =>
-      case _ => throw TypeError("The value "+num.pp+" is not of type INTEGER", env)
+    val evalednum = num.eval(env)
+
+    evalednum match {
+      case _:Lint =>
+      case _ => throw TypeError("The value "+evalednum.pp+" is not of type INTEGER", env)
     }
 
     val code = l.tail
     val sdo = Lsform(SpecialForms.form_do _, 'do)
     val seq = Lsymbol('eq)
     val splus = Lsymbol('+)
-    val cond = LL(LL(seq, n, num))
+    val cond = LL(LL(seq, n, evalednum))
     val step = LL(splus, Lint(1), n)
     val init = LL(LL(n, Lint(0), step))
 
