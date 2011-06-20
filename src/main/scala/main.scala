@@ -93,13 +93,13 @@ object main {
       case ex: ScriptAssert =>
         println("assertion failed: " + ex.msg)
         Util.printBacktrace(ex.env)
-         if (ex.env.host.debug)
+        if (ex.env.host.debug)
           rundebug(ex.env)
 
       case ex: ScriptError =>
         println("script error: " + ex.msg)
         Util.printBacktrace(ex.env)
-         if (ex.env.host.debug)
+        if (ex.env.host.debug)
           rundebug(ex.env)
 
       case ex: ListokRuntimeError =>

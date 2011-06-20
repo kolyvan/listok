@@ -22,11 +22,12 @@
 package ru.listok
 
 import util.parsing.combinator.{JavaTokenParsers, RegexParsers}
-import java.lang.{String, StringBuilder}
 
 object Parser extends JavaTokenParsers {
 //object Parser extends RegexParsers {
 
+  override def stringLiteral: Parser[String] =
+    ("\""+"""([^"\p{Cntrl}\\]|\\[\\/bfnrte]|\\u[a-fA-F0-9]{4})*"""+"\"").r  // added \e
 
   lazy val list_ident = """[a-zA-Z_~%!=<>\-\+\*\?\^\&\/]([a-zA-Z_@~%!:=#<>\-\+\*\?\^\&\d])*""".r
 
@@ -59,13 +60,6 @@ object Parser extends JavaTokenParsers {
   }
 
   lazy val char = new ParserChar
-
- // lazy val number: Parser[Lnumeric] = floatingPointNumber ^^ { s =>
- //   if (isinteger.pattern.matcher(s).matches())
- //     Lint(s.toInt)
- //   else
- //     Lfloat(s.toFloat)
- //   }
 
 
   lazy val string: Parser[Lstring] =  stringLiteral ^^ {s =>

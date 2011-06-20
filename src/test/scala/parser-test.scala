@@ -228,5 +228,9 @@ class ParserTest extends FunSuite {
      parsefail(")")
   }
 
+  test("escape") {
+    expect(Lstring("\n\b\f\r\t"))  {parse1(""""\n\b\f\r\t"""")}
+    expect(Lstring("\033"))  {parse1(""""\e"""")}
+  }
 }
 
