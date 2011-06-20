@@ -237,17 +237,17 @@ class Env ( val name: Symbol,
   //def host = global.host
   def backtrace(x: Lcommon)(fn: (Lcommon) => Lcommon) = host.backtrace(this, x)(fn)
 
-  def pp ():String = {
+  def pp = "(env " + name + ")" // "(env " + name + " " + hashCode + ")"
+
+  def dump(all: Boolean = false, sep: String = " ") = {
     if (values.isEmpty)
-      // "(env " + name + " " + hashCode + ")"
-      "(env " + name + " " + ")"
+      "(env " + name + ")"
     else {
       val sb = new StringBuilder
-      // sb ++= "(env " + name + " " + hashCode
-      sb ++= "(env " + name + " "
+      sb ++= "(env " + name
       values.foreach { p =>
-        if (!p.readonly) {
-          sb ++= " "
+        if (all || !p.readonly) {
+          sb ++= sep
           sb ++= Util.pp(p.name)
           sb ++= "="
           sb ++= p.value.pp
@@ -258,6 +258,18 @@ class Env ( val name: Symbol,
     }
   }
 
+
+  def findEnv(name: Symbol): Option[Env] =
+    if (name == this.name) Some(this)
+    else if (caller != null) caller.findEnv(name)
+    else if (parent != null) parent.findEnv(name)
+    else None
+
+  def findEnv(pos: Int): Option[Env] =
+    if (0 == pos) Some(this)
+    else if (caller != null) caller.findEnv(pos - 1)
+    else if (parent != null) parent.findEnv(pos - 1)
+    else None
 
 }
 

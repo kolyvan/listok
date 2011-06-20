@@ -21,6 +21,7 @@
 
 package ru.listok
 
+
 object main {
 
   def main(args: Array[String]) {
@@ -73,6 +74,11 @@ object main {
     val l = new Listok {
       override val debug = isdebug
       override def onexit(env: Env, status: Int) { java.lang.Runtime.getRuntime.exit(status) }
+      override def onbreak(env: Env, message: String){
+         println(" breakpoint: " + message)
+         Util.printBacktrace(env)
+         REPL.rundebug(env)
+       }
     }
     defineArgs(l, args)
     guard{ l.load(builtin.Streams.readFile(path)) }
@@ -94,38 +100,24 @@ object main {
         println("assertion failed: " + ex.msg)
         Util.printBacktrace(ex.env)
         if (ex.env.host.debug)
-          rundebug(ex.env)
+          REPL.rundebug(ex.env)
 
       case ex: ScriptError =>
         println("script error: " + ex.msg)
         Util.printBacktrace(ex.env)
         if (ex.env.host.debug)
-          rundebug(ex.env)
+          REPL.rundebug(ex.env)
 
       case ex: ListokRuntimeError =>
         println("runtime error: " + ex.getMessage)
         Util.printBacktrace(ex.env)
         if (ex.env.host.debug)
-          rundebug(ex.env)
+          REPL.rundebug(ex.env)
 
       case err =>
         println("internal error: " + err)
     }
 
-  def rundebug(env: Env) {
-    println(" debug mode, type ctrl+d to exit")
-    var ok = true
-    while (ok) {
-      readLine("debug> ") match {
-        case s: String => {
-          try { println(Listok.eval(env, s).pp) }
-          catch {
-            case e => println(e)
-          }
-        }
-        case _ => ok = false
-      }
-    }
-  }
+
 
 }

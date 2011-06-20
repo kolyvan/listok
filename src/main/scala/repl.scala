@@ -90,11 +90,23 @@ object REPL extends Host {
     println("bye")
   }
 
+  lazy val envName = ":env '?([a-zA-Z]+)".r
+  lazy val envPos  = ":env (\\d+)".r
+
   def rundebug(env: Env): Boolean = {
-    println(" debug mode, type . to continue or ctrl+d to exit")
+    println(" debug mode, type . to continue or :env name or ctrl+d to exit")
     while (true) {
       in.readLine("debug> ") match {
         case "."  => return true
+        case envName(name) =>
+          env.findEnv(Symbol(name)) match {
+            case Some(e) => println(e.dump())
+            case None => println("error: invalid name")
+          }
+        case envPos(pos) => env.findEnv(pos.toInt) match {
+            case Some(e) => println(e.dump())
+            case None => println("error: invalid position")
+          }
         case s: String => {
           try { println(Listok.eval(env, s).pp) }
           catch {
