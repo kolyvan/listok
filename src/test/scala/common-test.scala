@@ -78,6 +78,11 @@ class CommonTest extends FunSuite {
     expect(LL(Lchar('1'),Lchar('2'))) {listok.eval("(to-list \"12\")")}
     expect(LL(Lint(1),Lint(2))) {listok.eval("(to-list (vector 1 2))")}
     expect(LL(Lpair(Lstring("k"), Lint(1)))) {listok.eval("(to-list (hashmap :k 1))")}
+
+    expect(Lint(42)) {listok.eval("(to-number \"42\")")}
+    expect(Lfloat(100.0f)) {listok.eval("(to-number \"100.0\")")}
+    expect(Llong(2147483650l)) {listok.eval("(to-number 2147483650)")}
+    expect(Llong(2147483650l)) {listok.eval("(to-number \"2147483650\")")}
   }
 
    test("predicat") {
@@ -101,6 +106,7 @@ class CommonTest extends FunSuite {
     expect(Lnil) {listok.eval("(numberp t)")}
     expect(Ltrue) {listok.eval("(numberp 1)")}
     expect(Ltrue) {listok.eval("(numberp 1.0)")}
+    expect(Ltrue) {listok.eval("(numberp -2147483650)")}
 
     expect(Lnil) {listok.eval("(keywordp nil)")}
     expect(Lnil) {listok.eval("(keywordp t)")}

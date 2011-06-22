@@ -229,8 +229,14 @@ object Parser extends JavaTokenParsers {
   def isNumber(s: String): Option[Lcommon] = {
     //ru.listok.log("isnumber " + s + " m=" + isnumber.pattern.matcher(s).matches())
     if (isnumber.pattern.matcher(s).matches()) {
-      if (isinteger.pattern.matcher(s).matches())
-        Some(Lint(s.toInt))
+      if (isinteger.pattern.matcher(s).matches()) {
+        if (s.length < 10)    // Int.MaxLength = 2147483647, length = 10
+          Some(Lint(s.toInt))
+        else if (s.length < 19) // Long.MaxLength = 9223372036854775807, length = 19
+          Some(builtin.Numbers.toLnumeric(s.toLong))
+        else
+          Some(builtin.Numbers.toLnumeric(BigInt(s)))
+      }
       else
         Some(Lfloat(s.toFloat))
     }

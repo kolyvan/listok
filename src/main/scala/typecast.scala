@@ -29,7 +29,10 @@ trait Typecast { self: Lcommon =>
     }
 
   def castInt(env: Env) = self match {
-      case x: Lint => x
+      case i: Lint => i
+      case l: Llong => Lint(l.int)
+      case b: Lbignum => Lint(b.int)
+      case r: Lratio => Lint(r.int)
       case err => throw TypeError("The value " + err + " is not of type INTEGER", env)
     }
 
@@ -102,6 +105,11 @@ trait Typecast { self: Lcommon =>
       case err => throw throw TypeError("The value " + err + " is not PROCESS", env)
     }
 
+   def castNumeric(env: Env): Lnumeric = self match {
+      case n: Lnumeric => n
+      case err => throw TypeError("The value " + err + " is not of type NUMBER", env)
+    }
+
   def getString(env: Env) = self match {
     case Lstring(s) => s
     case Lkeyword(k) => Util.pp(k)
@@ -121,12 +129,17 @@ trait Typecast { self: Lcommon =>
   def getAny: Any = self match {
     case Lchar(ch) => ch
     case Lint(i) => i
+    case Llong(l) => l
+    case Lbignum(bi) => bi
+    case Lratio(r) => r
     case Lfloat(f) => f
     case Lstring(s) => s
     case Lsymbol(s) => s
     case Lkeyword(k) => Util.pp(k)
     case Lpair(a,b) => (a.getAny,b.getAny)
     case s: Lseq => s.seq.map(_.getAny)
+    case Lnil => Nil
+    case Ltrue => true
     case x => x.pp
   }
 

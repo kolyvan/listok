@@ -3,6 +3,8 @@ package ru.listok.test
 import _root_.ru.listok._
 import org.scalatest.FunSuite
 import java.io.{File, FileInputStream}
+import scala.math.BigInt
+import net.fyrie.ratio.Ratio
 
 
 class CompilerTest extends FunSuite {
@@ -44,6 +46,15 @@ class CompilerTest extends FunSuite {
 
     val l9 = List(Lpair(Lint(42), Lregex("\\w+")))
     expect(l9) { Compiler.load(Compiler.compile(l9)) }
+
+    val l10 = List(Llong(Long.MaxValue))
+    expect(l10) { Compiler.load(Compiler.compile(l10)) }
+
+    val l11 = List(Lbignum(BigInt("10000000000000000000")))
+    expect(l11) { Compiler.load(Compiler.compile(l11)) }
+
+    val l12 = List(Lratio(Ratio(13, 27)))
+    expect(l12) { Compiler.load(Compiler.compile(l12)) }
   }
 
   test("compile") {

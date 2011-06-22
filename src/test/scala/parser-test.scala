@@ -66,9 +66,11 @@ class ParserTest extends FunSuite {
     expect(Lint(0)) {parse1("0")}
     expect(Lint(42)) {parse1("42")}
     expect(Lint(-42)) {parse1("-42")}
+    expect(Lint(2147483647)) {parse1("2147483647")}
+    expect(Lint(-2147483648)) {parse1("-2147483648")}
   }
 
-  test ("floats") {
+  test ("float") {
     expect(Lfloat(0f)) {parse1("0.0")}
     expect(Lfloat(42.42f)) {parse1("42.42")}
     expect(Lfloat(-42.42f)) {parse1("-42.42")}
@@ -77,6 +79,18 @@ class ParserTest extends FunSuite {
     expect(Lfloat(-42.0f)) {parse1("-42f")}
     expect(Lfloat(4200.0f)) {parse1("42e2")}
     expect(Lfloat(-4200.0f)) {parse1("-42e2")}
+  }
+
+  test ("long") {
+    expect(Llong(2147483648l)) {parse1("2147483648")}
+    expect(Llong(-2147483649l)) {parse1("-2147483649")}
+    expect(Llong(Long.MaxValue)) {parse1("9223372036854775807")}
+    expect(Llong(Long.MinValue)) {parse1("-9223372036854775808")}
+  }
+
+  test ("bignum") {
+    expect(Lbignum(BigInt("9223372036854775808"))) {parse1("9223372036854775808")}
+    expect(Lbignum(BigInt("-9223372036854775809"))) {parse1("-9223372036854775809")}
   }
 
   test ("string") {

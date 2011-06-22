@@ -22,8 +22,8 @@
 package ru.listok
 
 import collection.mutable.ArraySeq
-
-//import java.io._
+import net.fyrie.ratio.Ratio
+import math.{ScalaNumber, ScalaNumericConversions, BigInt}
 
 object Util {
 
@@ -210,13 +210,16 @@ object Util {
 
   //
 
-   def toLcommon(x: Any): Lcommon = x match {
+  def toLcommon(x: Any): Lcommon = x match {
     case b: Byte => Lint(b.toInt)
     case s: Short => Lint(s.toInt)
     case i: Int => Lint(i)
-    case l: Long => Lint(l.toInt)
+    case l: Long => Llong(l)
     case f: Float => Lfloat(f)
     case d: Double => Lfloat(d.toFloat)
+   // case bi: BigInt => Lbignum(bi)
+   // case r: Ratio => Lratio(r)
+    case n: ScalaNumber => builtin.Numbers.toLnumeric(n)
     case s: String => Lstring(s)
     case s: Symbol => Lkeyword(s)
     case c: Char => Lchar(c)

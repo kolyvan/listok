@@ -199,20 +199,42 @@ object Common extends Helpers {
     l.head match {
       case Lnil => Lint(0)
       case Ltrue => Lint(1)
-      case i:Lint => i
-      case Lfloat(f) => Lint(f.toInt)
       case Lchar(c) => Lint(c.toInt)
-      case Lstring(s) => Lint(s.toInt)
-      case err => throw TypeError(err.pp + " can't be converted to type STRING", env)
+      case n: Lnumeric => Lint(n.int)
+      case Lstring(s) =>
+        Parser.isNumber(s) match {
+          case None => throw SyntaxError("Invalid number format: " + s, env)
+          case Some(Lfloat(_)) => throw SyntaxError("Invalid number format: " + s, env)
+          case Some(x) => x
+        }
+      case err => throw TypeError(err.pp + " can't be converted to type INT", env)
     }
   }
 
   def func_tofloat(env: Env, l: List[Lcommon]): Lcommon = {
     mustEqual(env, l, 1)
     l.head match {
-      case Lint(i) => Lfloat(i.toFloat)
-      case f: Lfloat => f
-      case Lstring(s) => Lfloat(s.toFloat)
+     // case Lint(i) => Lfloat(i.toFloat)
+     // case f: Lfloat => f
+      case n: Lnumeric => Lfloat(n.float)
+      case Lstring(s) =>
+        Parser.isNumber(s) match {
+          case Some(n: Lnumeric) => Lfloat(n.float)
+          case _ => throw SyntaxError("Invalid number format: " + s, env)
+        }
+      case err => throw TypeError(err.pp + " can't be converted to type STRING", env)
+    }
+  }
+
+  def func_tonumber(env: Env, l: List[Lcommon]): Lcommon = {
+    mustEqual(env, l, 1)
+    l.head match {
+      case n: Lnumeric => n
+      case Lstring(s) =>
+        Parser.isNumber(s) match {
+          case Some(n: Lnumeric) => n
+          case _ => throw SyntaxError("Invalid number format: " + s, env)
+        }
       case err => throw TypeError(err.pp + " can't be converted to type STRING", env)
     }
   }
@@ -460,9 +482,9 @@ object Common extends Helpers {
     Lfunction(func_tochar, Symbol("to-char")),
     Lfunction(func_toint, Symbol("to-int")),
     Lfunction(func_tofloat, Symbol("to-float")),
+    Lfunction(func_tonumber, Symbol("to-number")),
     Lfunction(func_tolist, Symbol("to-list")),
     Lfunction(func_tovector, Symbol("to-vector")),
-
 
     Lfunction(func_atom, 'atom),
     Lfunction(func_listp, 'listp),

@@ -25,7 +25,7 @@ import scala.collection.mutable.{Map => MMap}
 import scala.collection.mutable.ArraySeq
 import java.io.{OutputStream, InputStream, PrintStream, BufferedReader}
 import java.util.regex.{ Pattern }
-
+import net.fyrie.ratio.Ratio
 
 // adt
 
@@ -52,24 +52,72 @@ abstract class Lseq extends Lcommon {
 abstract class Lnumeric extends Latom {
   def float: Float
   def int: Int
+  def long: Long
+  def bigint: BigInt
+  def scalaNumber: scala.math.ScalaNumber
+  def negate: Lnumeric
+  def abs: Lnumeric
 }
 
 //case class Lbyte(val byte: Byte) extends Latom {
   //def pp = byte.toString
 //}
 
-case class Lchar(val char: Char) extends Latom {
-  def pp = "#\\" + char
-}
+// Lint Llong - fixnum
 
 case class Lint(val int: Int) extends Lnumeric {
   def float = int.toFloat
+  def long = int.toLong
+  def bigint = BigInt(int)
   def pp = int.toString
+  def scalaNumber = int
+  def negate = Lint(-int)
+  def abs = Lint(int.abs)
+}
+
+case class Llong(val long: Long) extends Lnumeric {
+  def int = long.toInt
+  def float = long.toFloat
+  def bigint = BigInt(long)
+  def pp = long.toString
+  def scalaNumber = long
+  def negate = Llong(-long)
+  def abs = Llong(long.abs)
+}
+
+case class Lbignum(val bigint: BigInt) extends Lnumeric {
+  def int = bigint.toInt
+  def long = bigint.toLong
+  def float = bigint.toFloat
+  def pp = bigint.toString
+  def scalaNumber = bigint
+  def negate = Lbignum(-bigint)
+  def abs = Lbignum(bigint.abs)
 }
 
 case class Lfloat(val float: Float) extends Lnumeric {
   def int = float.toInt
+  def long = float.toLong
+  def bigint = BigInt(int)
   def pp = float.toString
+  def scalaNumber = float
+  def negate = Lfloat(-float)
+  def abs = Lfloat(float.abs)
+}
+
+case class Lratio(val ratio: Ratio) extends Lnumeric {
+  def int = ratio.intValue
+  def long = ratio.longValue
+  def float = ratio.floatValue
+  def bigint = ratio.n / ratio.d
+  def pp = ratio.toString
+  def scalaNumber = ratio
+  def negate = Lratio(Ratio(-ratio.n, ratio.d))
+  def abs = Lratio(Ratio(ratio.n.abs, ratio.d))
+}
+
+case class Lchar(val char: Char) extends Latom {
+  def pp = "#\\" + char
 }
 
 case class Lstring(val str: String) extends Lseq {

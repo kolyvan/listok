@@ -23,39 +23,345 @@ package ru.listok.builtin
 
 import _root_.ru.listok._
 
+import scala.math.{BigInt, ScalaNumber}
+import scala.runtime.{RichInt, RichLong, RichFloat}
+import net.fyrie.ratio.Ratio
+
+// add|sub|mul - these code taken from http://www.java2s.com/
+
+trait NumOp[R] {
+  def apply(a: Long, b: Long): R
+  def apply(a: Int, b: Int): R
+  def apply(a: Float, b: Float): R
+  def apply(a: BigInt, b: BigInt): R
+  def apply(a: Ratio, b: Ratio): R
+}
+
+object AddOp extends NumOp[ScalaNumber] {
+
+  def apply(a: Long, b: Long): ScalaNumber = {
+    if (a > b)
+      apply(b, a)   // use symmetry to reduce boundry cases
+    else {
+      // assert a <= b
+      if (a < 0) {
+        if (b < 0) {
+          // check for negative overflow
+          if (Long.MinValue - b <= a)
+            a + b
+          else
+            apply(BigInt(a), BigInt(b))
+        }
+        else
+          // oppisite sign addition is always safe
+          a + b
+      } else {
+        // assert a >= 0
+        // assert b >= 0
+        // check for positive overflow
+        if (a <= Long.MaxValue - b)
+          a + b
+        else
+          apply(BigInt(a), BigInt(b))
+      }
+    }
+  }
+
+  def apply(a: Int, b: Int): ScalaNumber = {
+    if (a > b)
+      apply(b, a)   // use symmetry to reduce boundry cases
+    else {
+      // assert a <= b
+      if (a < 0) {
+        if (b < 0) {
+          // check for negative overflow
+          if (Int.MinValue - b <= a)
+            a + b
+          else
+            apply(a.toLong, b.toLong)
+        }
+        else
+          // oppisite sign addition is always safe
+          a + b
+      } else {
+        // assert a >= 0
+        // assert b >= 0
+        // check for positive overflow
+        if (a <= Int.MaxValue - b)
+          a + b
+        else
+          apply(a.toLong, b.toLong)
+      }
+    }
+  }
+
+  def apply(a: Float, b: Float): ScalaNumber = a + b
+
+  def apply(a: BigInt, b: BigInt): ScalaNumber = a + b
+
+  def apply(a: Ratio, b: Ratio): ScalaNumber = a + b
+}
+
+object SubOp extends NumOp[ScalaNumber] {
+  def apply(a: Long, b: Long): ScalaNumber = {
+    if (b == Long.MinValue) {
+      if (a < 0)
+        a - b
+      else
+        apply(BigInt(a), BigInt(b))
+    } else
+      // use additive inverse
+      AddOp(a, -b)
+  }
+
+  def apply(a: Int, b: Int): ScalaNumber = {
+    if (b == Int.MinValue) {
+      if (a < 0)
+        a - b
+      else
+        apply(a.toLong, b.toLong)
+    } else
+      // use additive inverse
+      AddOp(a, -b)
+  }
+
+  def apply(a: Float, b: Float): ScalaNumber = a - b
+
+  def apply(a: BigInt, b: BigInt): ScalaNumber = a - b
+
+  def apply(a: Ratio, b: Ratio): ScalaNumber = a - b
+
+}
+
+object MulOp extends NumOp[ScalaNumber] {
+
+   def apply (a: Long, b: Long): ScalaNumber = {
+     if (a > b)
+       // use symmetry to reduce boundry cases
+       apply(b, a)
+     else {
+       if (a < 0) {
+         if (b < 0) {
+           // check for positive overflow with negative a, negative b
+           if (a >= Long.MaxValue / b)
+             a * b
+           else
+             apply(BigInt(a), BigInt(b))
+
+         } else if (b > 0) {
+           // check for negative overflow with negative a, positive b
+           if (Long.MinValue / b <= a)
+             a * b
+           else
+             apply(BigInt(a), BigInt(b))
+
+         } else
+           // assert b == 0
+           0
+
+       } else if (a > 0) {
+           // assert a > 0
+           // assert b > 0
+           // check for positive overflow with positive a, positive b
+           if (a <= Long.MaxValue / b)
+             a * b
+           else
+             apply(BigInt(a), BigInt(b))
+
+       } else
+         // assert a == 0
+         0
+     }
+   }
+
+  def apply (a: Int, b: Int): ScalaNumber = {
+    if (a > b)
+      // use symmetry to reduce boundry cases
+      apply(b, a)
+    else {
+      if (a < 0) {
+        if (b < 0) {
+          // check for positive overflow with negative a, negative b
+          if (a >= Int.MaxValue / b)
+            a * b
+          else
+            apply(a.toLong, b.toLong)
+
+        } else if (b > 0) {
+          // check for negative overflow with negative a, positive b
+          if (Int.MinValue / b <= a)
+            a * b
+          else
+            apply(a.toLong, b.toLong)
+
+        } else
+          // assert b == 0
+          0
+
+      } else if (a > 0) {
+          // assert a > 0
+          // assert b > 0
+          // check for positive overflow with positive a, positive b
+          if (a <= Int.MaxValue / b)
+            a * b
+          else
+            apply(a.toLong, b.toLong)
+
+      } else
+        // assert a == 0
+        0
+    }
+  }
+
+  def apply(a: Float, b: Float): ScalaNumber = a * b
+
+  def apply(a: BigInt, b: BigInt): ScalaNumber = a * b
+
+  def apply(a: Ratio, b: Ratio): ScalaNumber = a * b
+}
+
+object DivOp extends NumOp[ScalaNumber] {
+  def apply(a: Long, b: Long)     = Ratio(BigInt(a), BigInt(b))
+  def apply(a: Int, b: Int)       = Ratio(BigInt(a), BigInt(b))
+  def apply(a: Float, b: Float)   = a / b
+  def apply(a: BigInt, b: BigInt) = Ratio(a, b)
+  def apply(a: Ratio, b: Ratio)   = a / b
+}
+
+object CmpOp extends NumOp[Int] {
+  def apply(a: Long, b: Long)     = a compare b
+  def apply(a: Int, b: Int)       = a compare b
+  def apply(a: Float, b: Float)   = a compare b
+  def apply(a: BigInt, b: BigInt) = a compare b
+  def apply(a: Ratio, b: Ratio)   = a compare b
+}
+
+object RemOp extends NumOp[ScalaNumber] {
+  def apply(a: Long, b: Long)     = a % b
+  def apply(a: Int, b: Int)       = a % b
+  def apply(a: Float, b: Float)   = a % b
+  def apply(a: BigInt, b: BigInt) = a % b
+  def apply(a: Ratio, b: Ratio)   = bugcheck("unimplemented") //{ val d = a / b; a - d * b }
+}
+
+object ModOp extends NumOp[ScalaNumber] {
+  def apply(a: Long, b: Long)     = { val r = a % b; if (r < 0) r + b else r }
+  def apply(a: Int, b: Int)       = { val r = a % b; if (r < 0) r + b else r }
+  def apply(a: Float, b: Float)   = { val r = a % b; if (r < 0) r + b else r }
+  def apply(a: BigInt, b: BigInt) = a mod b
+  def apply(a: Ratio, b: Ratio)   = bugcheck("unimplemented")
+
+}
+
+// def gcd(x: Int, y: Int): Int =
+// if (b == 0) x
+// else gcd(b, x % y)
+
+//object GcdOp extends NumOp[ScalaNumber] {
+//  def apply(a: Long, b: Long)     = a gcd b
+//  def apply(a: Int, b: Int)       = a gcd b
+//  def apply(a: Float, b: Float)   = a gcd b
+//  def apply(a: BigInt, b: BigInt) = a gcd b
+//}
+
+
+object NumOp {
+
+  def calc[R] (op: NumOp[R], s: ScalaNumber, l: Lnumeric): R = (s,l) match {
+    case (a: RichInt, Lint(b))     => op(a.intValue, b)
+    case (a: RichInt, Llong(b))    => op(a.toLong, b)
+    case (a: RichInt, Lfloat(b))   => op(a.toFloat, b)
+    case (a: RichInt, Lbignum(b))  => op(BigInt(a.intValue), b)
+    case (a: RichInt, Lratio(b))   => op(Ratio(a.intValue), b)
+
+    case (a: RichLong, Lint(b))    => op(a.longValue, b.toLong)
+    case (a: RichLong, Llong(b))   => op(a.longValue, b)
+    case (a: RichLong, Lfloat(b))  => op(a.toFloat, b)
+    case (a: RichLong, Lbignum(b)) => op(BigInt(a.longValue), b)
+    case (a: RichLong, Lratio(b))  => op(Ratio(a.longValue), b)
+
+    case (a: RichFloat, Lint(b))   => op(a.floatValue, b.toFloat)
+    case (a: RichFloat, Llong(b))  => op(a.floatValue, b.toFloat)
+    case (a: RichFloat, Lfloat(b)) => op(a.floatValue, b.toFloat)
+    case (a: RichFloat, Lbignum(b))=> op(a.floatValue, b.toFloat)
+    case (a: RichFloat, Lratio(b)) => op(a.floatValue, b.toFloat)
+
+    case (a: BigInt, Lint(b))      => op(a, BigInt(b))
+    case (a: BigInt, Llong(b))     => op(a, BigInt(b))
+    case (a: BigInt, Lbignum(b))   => op(a, b)
+    case (a: BigInt, Lfloat(b))    => op(a.toFloat, b)
+    case (a: BigInt, Lratio(b))    => op(Ratio(a), b)
+
+    case (a: Ratio, Lint(b))       => op(a, Ratio(b))
+    case (a: Ratio, Llong(b))      => op(a, Ratio(b))
+    case (a: Ratio, Lbignum(b))    => op(a, Ratio(b))
+    case (a: Ratio, Lfloat(b))     => op(a.toFloat, b)
+    case (a: Ratio, Lratio(b))     => op(a, b)
+
+    case err => bugcheck("unexpected argument in numop.add: " + err)
+  }
+
+  def calc[R] (op: NumOp[R], s: Lnumeric, l: Lnumeric): R = (s,l) match {
+    case (Lint(a), Lint(b))      => op(a, b)
+    case (Lint(a), Llong(b))     => op(a.toLong, b)
+    case (Lint(a), Lfloat(b))    => op(a.toFloat, b)
+    case (Lint(a), Lbignum(b))   => op(BigInt(a), b)
+    case (Lint(a), Lratio(b))    => op(Ratio(a), b)
+
+    case (Llong(a), Lint(b))     => op(a, b.toLong)
+    case (Llong(a), Llong(b))    => op(a, b)
+    case (Llong(a), Lfloat(b))   => op(a.toFloat, b)
+    case (Llong(a), Lbignum(b))  => op(BigInt(a), b)
+    case (Llong(a), Lratio(b))   => op(Ratio(a), b)
+
+    case (Lfloat(a), Lint(b))    => op(a, b.toFloat)
+    case (Lfloat(a), Llong(b))   => op(a, b.toFloat)
+    case (Lfloat(a), Lfloat(b))  => op(a, b.toFloat)
+    case (Lfloat(a), Lbignum(b)) => op(a, b.toFloat)
+    case (Lfloat(a), Lratio(b))  => op(a, b.toFloat)
+
+    case (Lbignum(a), Lint(b))   => op(a, BigInt(b))
+    case (Lbignum(a), Llong(b))  => op(a, BigInt(b))
+    case (Lbignum(a), Lbignum(b))=> op(a, b)
+    case (Lbignum(a), Lfloat(b)) => op(a.toFloat, b)
+    case (Lbignum(a), Lratio(b)) => op(Ratio(a), b)
+
+    case (Lratio(a), Lint(b))    => op(a, Ratio(b))
+    case (Lratio(a), Llong(b))   => op(a, Ratio(b))
+    case (Lratio(a), Lbignum(b)) => op(a, Ratio(b))
+    case (Lratio(a), Lfloat(b))  => op(a.toFloat, b)
+    case (Lratio(a), Lratio(b))  => op(a, b)
+
+    case err => bugcheck("unexpected argument in numop.add: " + err)
+  }
+
+  def add(s: ScalaNumber, l: Lnumeric): ScalaNumber = calc(AddOp, s, l)
+  def sub(s: ScalaNumber, l: Lnumeric): ScalaNumber = calc(SubOp, s, l)
+  def mul(s: ScalaNumber, l: Lnumeric): ScalaNumber = calc(MulOp, s, l)
+  def div(s: ScalaNumber, l: Lnumeric): ScalaNumber = calc(DivOp, s, l)
+}
+
+
 object Numbers extends Helpers {
 
-  def cast(env: Env, nums: List[Lcommon]): Either[List[Float], List[Int]]  = {
-    if (nums.forall {
-      case f: Lfloat => false
-      case i: Lint => true
-      case err => throw TypeError("The value " + err.pp + " is not of type NUMBER", env)
-    })
-    {
-      Right(nums.map { x => (x: @unchecked) match {
-        case Lfloat(f) => f.toInt
-        case Lint(i) => i
-      }})
-    }
-    else
-    {
-      Left(nums.map { x => (x: @unchecked) match {
-        case Lfloat(f) => f
-        case Lint(i) => i.toFloat
-      }})
-    }
+  def toLnumeric(value: ScalaNumber): Lnumeric = value match {
+    case r: Ratio =>
+      if (r.d == 1) toLnumeric(r.n) else Lratio(r)
+
+    case b: BigInt =>
+      val len = b.bitLength
+      if (len < 32) Lint(b.toInt)
+      else if (len < 64) Llong(b.toLong)
+      else Lbignum(b)
+
+    case l: RichLong if l.isValidInt => Lint(l.toInt)
+    case l: RichLong => Llong(l.longValue)
+    case i: RichInt => Lint(i.intValue)
+    case f: RichFloat => Lfloat(f.floatValue)
+
+    case err => bugcheck("unable cast to unexpected number " + err)
   }
 
-  def compare(env: Env, a: Lcommon, b: Lcommon) = {
-    (a,b) match {
-      case (Lint(l), Lint(r))     => l compare r
-      case (Lfloat(l), Lfloat(r)) => l compare r
-      case (Lint(l), Lfloat(r))   => l.toFloat compare r
-      case (Lfloat(l), Lint(r))   => l compare r
-      case (Lchar(l), Lchar(r))   => l compare r
-      case _ => throw TypeError("The value " + a.pp + " or " + b.pp + " is not comparable", env)
-    }
-  }
 
   def compare(env: Env, args: List[Lcommon])(f: (Int) => Boolean): Lcommon = {
     if (args == Nil)
@@ -64,43 +370,39 @@ object Numbers extends Helpers {
     var a = args.head
     var p = args.tail
     while (p != Nil && r) {
-      r = r && f(compare(env, a, p.head))
+      r = r && f(NumOp.calc(CmpOp, a.castNumeric(env), p.head.castNumeric(env)))
       a = p.head
       p = p.tail
     }
     Util.toLbool(r)
   }
 
-  ///
-
   def func_add(env: Env, args: List[Lcommon]): Lcommon = {
     if (args == Nil)
        Lint(0)
-    else
-    cast(env, args) match {
-      case Left(f) => Lfloat(f.reduceLeft(_ + _))
-      case Right(i) => Lint(i.reduceLeft(_ + _))
+    else {
+      val a = args.head.castNumeric(env).scalaNumber
+      toLnumeric( args.tail.foldLeft(a){ (s,l) => NumOp.add(s, l.castNumeric(env)) })
     }
   }
 
   def func_sub(env: Env, args: List[Lcommon]): Lcommon = {
     if (args == Nil)
       throw SyntaxError("Invalid number of argument: 0", env)
-    val minus = if (args.length == 1) -1 else 1
-    cast(env, args) match {
-      case Left(f) => Lfloat(minus * f.reduceLeft(_ - _))
-      case Right(i) => Lint(minus * i.reduceLeft(_ - _))
-    }
+    val a = args.head.castNumeric(env)
+    if (args.length == 1)
+      a.negate
+    else
+      toLnumeric( args.tail.foldLeft(a.scalaNumber){ (s,l) => NumOp.sub(s, l.castNumeric(env)) })
   }
 
   def func_mul(env: Env, args: List[Lcommon]): Lcommon = {
     if (args == Nil)
        Lint(1)
-    else
-      cast(env, args) match {
-        case Left(f) => Lfloat(f.reduceLeft(_ * _))
-        case Right(i) => Lint(i.reduceLeft(_ * _))
-      }
+    else {
+      val a = args.head.castNumeric(env).scalaNumber
+      toLnumeric( args.tail.foldLeft(a){ (s,l) => NumOp.mul(s, l.castNumeric(env)) })
+    }
   }
 
   def func_div(env: Env, args: List[Lcommon]): Lcommon = {
@@ -108,11 +410,12 @@ object Numbers extends Helpers {
       throw SyntaxError("Invalid number of argument: 0", env)
 
     try {
-      cast(env, args) match {
-        case Left(f) => Lfloat(f.reduceLeft(_ / _))
-        case Right(i) => Lint(i.reduceLeft(_ / _))
-      } }
+      val a = args.head.castNumeric(env).scalaNumber
+      toLnumeric( args.tail.foldLeft(a){ (s,l) => NumOp.div(s, l.castNumeric(env)) })
+    }
     catch  {
+      case ex: IllegalArgumentException =>
+        throw ArithmeticError(ex.getMessage, env)
       case ex: java.lang.ArithmeticException =>
         throw ArithmeticError(ex.getMessage, env)
     }
@@ -132,84 +435,72 @@ object Numbers extends Helpers {
 
   def func_incr(env: Env, args: List[Lcommon]): Lcommon = {
     mustEqual(env, args, 1)
-    args.head match {
-      case Lint(i) => Lint(i+1)
-      case Lfloat(f) => Lfloat(f+1)
-      case err => throw TypeError("The value " + err + " is not of type NUMBER", env)
-    }
+    toLnumeric(NumOp.calc(AddOp, 1, args.head.castNumeric(env)))
   }
 
   def func_decr(env: Env, args: List[Lcommon]): Lcommon = {
     mustEqual(env, args, 1)
-    args.head match {
-      case Lint(i) => Lint(i-1)
-      case Lfloat(f) => Lfloat(f-1)
-      case err => throw TypeError("The value " + err + " is not of type NUMBER", env)
-    }
+    toLnumeric(NumOp.calc(AddOp, -1, args.head.castNumeric(env)))
   }
 
   def func_rem(env: Env, args: List[Lcommon]): Lcommon = {
     mustEqual(env, args, 2)
-    val a = args.head.castInt(env).int
-    val b = args(1).castInt(env).int
-    Lint(a % b)
+    toLnumeric(NumOp.calc(RemOp, args(0).castNumeric(env), args(1).castNumeric(env)))
+  }
+
+  def func_mod(env: Env, args: List[Lcommon]): Lcommon = {
+    mustEqual(env, args, 2)
+    toLnumeric(NumOp.calc(ModOp, args(0).castNumeric(env), args(1).castNumeric(env)))
   }
 
   def func_oddp(env: Env, args: List[Lcommon]): Lcommon = {
     mustEqual(env, args, 1)
-    val a = args.head.castInt(env).int
-    if (a % 2 == 0) Lnil else Ltrue
+    val rem = NumOp.calc(RemOp, args.head.castNumeric(env), Lint(2))
+    Util.toLbool(0 != NumOp.calc(CmpOp, rem, Lint(0)))
   }
 
   def func_evenp(env: Env, args: List[Lcommon]): Lcommon = {
     mustEqual(env, args, 1)
-    val a = args.head.castInt(env).int
-    if (a % 2 == 0) Ltrue else Lnil
+    val rem = NumOp.calc(RemOp, args.head.castNumeric(env), Lint(2))
+    Util.toLbool(0 == NumOp.calc(CmpOp, rem, Lint(0)))
   }
 
   def func_zerop(env: Env, args: List[Lcommon]): Lcommon = {
     mustEqual(env, args, 1)
-    val a = args.head.castInt(env).int
-    Util.toLbool(a == 0)
+    Util.toLbool(0 == NumOp.calc(CmpOp, args.head.castNumeric(env), Lint(0)))
   }
 
   def func_plusp(env: Env, args: List[Lcommon]): Lcommon = {
     mustEqual(env, args, 1)
-    val a = args.head.castInt(env).int
-    Util.toLbool(a > 0)
+    Util.toLbool(NumOp.calc(CmpOp, args.head.castNumeric(env), Lint(0)) > 0)
   }
 
   def func_minusp(env: Env, args: List[Lcommon]): Lcommon = {
     mustEqual(env, args, 1)
-    val a = args.head.castInt(env).int
-    Util.toLbool(a < 0)
+    Util.toLbool(NumOp.calc(CmpOp, args.head.castNumeric(env), Lint(0)) < 0)
   }
 
   def func_min(env: Env, args: List[Lcommon]): Lcommon = {
     if (args == Nil)
       throw SyntaxError("Invalid number of argument: 0", env)
-    cast(env, args) match {
-      case Left(f) => Lfloat(f.min)
-      case Right(i) => Lint(i.min)
+    args.reduceLeft{ (x, y) =>
+        val r = NumOp.calc(CmpOp, x.castNumeric(env), y.castNumeric(env))
+        if (r <= 0) x else y
     }
   }
 
   def func_max(env: Env, args: List[Lcommon]): Lcommon = {
     if (args == Nil)
       throw SyntaxError("Invalid number of argument: 0", env)
-    cast(env, args) match {
-      case Left(f) => Lfloat(f.max)
-      case Right(i) => Lint(i.max)
+    args.reduceLeft{ (x, y) =>
+        val r = NumOp.calc(CmpOp, x.castNumeric(env), y.castNumeric(env))
+        if (r >= 0) x else y
     }
   }
 
   def func_abs(env: Env, args: List[Lcommon]): Lcommon = {
     mustEqual(env, args, 1)
-    args.head match {
-      case Lint(i) => (Lint(i.abs))
-      case Lfloat(f) => (Lfloat(f.abs))
-      case err => throw TypeError("Argument is not a NUMBER: " + err.pp, env)
-    }
+    args.head.castNumeric(env).abs
   }
 
   val all = List (
@@ -221,11 +512,10 @@ object Numbers extends Helpers {
     Lfunction(func_less_eq, '<=),
     Lfunction(func_more, '>),
     Lfunction(func_more_eq, '>=),
-    // Lfunction(func_eq, '=),
-    // Lfunction(func_noteq, '/=),
     Lfunction(func_incr, 'incr),
     Lfunction(func_decr, 'decr),
     Lfunction(func_rem, 'rem),
+    Lfunction(func_mod, 'mod),
     Lfunction(func_oddp, 'oddp),
     Lfunction(func_evenp, 'evenp),
     Lfunction(func_zerop, 'zerop),
@@ -234,6 +524,12 @@ object Numbers extends Helpers {
     Lfunction(func_min, 'min),
     Lfunction(func_max, 'max),
     Lfunction(func_abs, 'abs)
+
+    // gcd lcm
+    // pow
+    // sqrt
+    // ++ 1+ 1- --
+
   )
 }
 

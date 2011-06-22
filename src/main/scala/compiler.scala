@@ -23,6 +23,7 @@ package ru.listok
 
 import sbinary._
 import collection.mutable.ArraySeq
+import net.fyrie.ratio.Ratio
 
 //import DefaultProtocol._
 import Operations._
@@ -50,6 +51,9 @@ object Compiler extends DefaultProtocol {
         case Lvector(a)   => writeSign(12); write(out, a.toArray)
         case Lpair(a,b)   => writeSign(13); writes(out, a); writes(out, b)
         case Lregex(s)    => writeSign(14); write(out, s)
+        case Llong(l)     => writeSign(15); write(out, l)
+        case Lbignum(b)   => writeSign(16); write(out, b)
+        case Lratio(r)    => writeSign(17); write(out, r.n); write(out, r.d)
         case x => bugcheck("can't write an unknown lcommon type: " + x.pp)
         }
       }
@@ -72,6 +76,9 @@ object Compiler extends DefaultProtocol {
         case 12 => val a = read[Array[Lcommon]](in); Lvector(ArraySeq(a:_*))
         case 13 => Lpair(reads(in),reads(in))
         case 14 => Lregex(read[String](in))
+        case 15 => Llong(read[Long](in))
+        case 16 => Lbignum(read[BigInt](in))
+        case 17 => Lratio(Ratio(read[BigInt](in), read[BigInt](in)))
         case x => bugcheck("can't read an unknown lcommon type: " + x)
       }
     }
