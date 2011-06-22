@@ -1,0 +1,103 @@
+":";exec ./listok -l $0 "$@"
+
+(defun usage () (display "usage: traffic maxKBps [interface]\n"))
+
+(unless *args* 
+  (usage) 
+  (exit))
+
+(let ((os (system-name)))
+  (unless (search "FreeBSD" os)
+    (display " unable to run on %s, required freebsd\n" os)  
+    (exit)))
+
+(defconstant maxBps (* 1000 (to-int (head *args*))))
+(defconstant ws #/(\s+)/)
+
+(defun default-iface () 
+  (head 
+    (regex-split ws 
+      (read-line 
+        (process-input-stream 
+          (process "ifconfig" "-l"))))))
+
+
+(defconstant iface 
+  (if (> (length *args*) 1) 
+    (elt *args* 1)
+    (default-iface)))
+
+(display " running netstat on %s during 60 seconds, maximum KBps %d\n" iface (/ maxBps 1000))
+
+(def netstat (process "netstat" "-w" "1" "-I" iface)) ; netstat -I iface interval - on linux
+(unless netstat 
+  (display "error, unable to run netstat\n")
+  (exit))
+
+(def in (process-input-stream netstat))
+(unless in
+  (display "error, unable to get input-stream\n")
+  (exit))
+
+(load "ansicode.lokc" :ansi)
+
+(defconstant limit0 (* maxBps 0.8))
+(defconstant limit1 (* maxBps 0.6))
+(defconstant limit2 (* maxBps 0.3))
+(defconstant tentn-of-max (/ maxBps 10))
+
+
+(defun show (value i) 
+
+  (display (ansi:right (+ 1 i)))
+  (def n (/ value tentn-of-max))
+  (def cap nil)
+
+  (cond 
+    ((> (rem value tentn-of-max) (* tentn-of-max 0.6)) (setf n (+ 1 n)))
+    ((> (rem value tentn-of-max) (* tentn-of-max 0.3)) (setf cap t)))
+
+  (when ( > n 0) 
+    (cond 
+      ((> value limit0) (display ansi:bg-red))
+      ((> value limit1) (display ansi:bg-magenta))
+      ((> value limit2) (display ansi:bg-blue))
+      (t (display ansi:bg-green)))
+
+      (dotimes (y n) 
+        (display (string (ansi:up 1) "-" (ansi:left 1))))
+
+      (display (string ansi:reset (ansi:down n))))
+
+  (when cap 
+    (cond 
+      ((> value limit0) (display ansi:red))
+      ((> value limit1) (display ansi:magenta))
+      ((> value limit2) (display ansi:blue))
+      (t (display ansi:green)))
+
+      (display (string (ansi:up (+ n 1)) "_" (ansi:left 1)))
+      (display (string ansi:reset (ansi:down (+ 1 n)))))
+
+    (display (string "\r traffic : " ansi:bold  "%4d KBps\r"  ansi:reset) (to-int (/ value 1000))))
+
+
+(defun iter (n)
+  (declare :tco)
+  (when (< n 60)
+    (def line (read-line in))
+    (cond 
+        ((search "input" line)   (iter n))
+        ((search "packets" line) (iter n))
+        (t
+          (show (to-int (elt (regex-split ws line) 4)) n)  
+          (sleep 1)
+          (iter (+ n 1)))
+        )))
+
+
+(display "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")  
+(iter 0)
+(close in)
+(display "\n")
+
