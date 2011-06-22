@@ -73,30 +73,26 @@ object Macro {
       case _ => throw SyntaxError("Mailformed condition for dotimes", env)
     }
 
-    n match {
-      case _:Lsymbol =>
+    val ns = n match {
+      case s:Lsymbol => s.sanitize
       case _ => throw TypeError("DO step variable is not a symbol: " + n.pp, env)
     }
 
-    val evalednum = num.eval(env)
-
-    evalednum match {
-      case _:Lint =>
-      case _ => throw TypeError("The value "+evalednum.pp+" is not of type INTEGER", env)
+    val evalednum = num.eval(env) match {
+      case x:Lnumeric => Lint(x.int)
+      case err => throw TypeError("The value "+err.pp+" is not of type NUMBER", env)
     }
 
     val code = l.tail
-    val sdo = Lsform(SpecialForms.form_do _, 'do)
+    val sdo = SpecialForms.make('do)
     val seq = Lsymbol('eq)
     val splus = Lsymbol('+)
-    val cond = LL(LL(seq, n, evalednum))
-    val step = LL(splus, Lint(1), n)
-    val init = LL(LL(n, Lint(0), step))
+    val cond = LL(LL(seq, ns, evalednum))
+    val step = LL(splus, Lint(1), ns)
+    val init = LL(LL(ns, Lint(0), step))
 
     Llist(sdo :: init :: cond :: code)
   }
-
-
 
   def macro_doseq (env: Env, l: List[Lcommon]): Lcommon = {
 
@@ -115,7 +111,7 @@ object Macro {
     }
 
     n match {
-      case s:Lsymbol =>
+      case _:Lsymbol =>
       case _ => throw TypeError("DO step variable is not a symbol: " + n.pp, env)
     }
 

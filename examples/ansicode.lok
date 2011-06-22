@@ -35,9 +35,9 @@
 (defconstant clr-line   "\e[K")
 (defconstant clr-screen "\e[2J")
 
-(defun right (n)  (string "\e[" (to-str n) "C"))
-(defun left (n)   (string "\e[" (to-str n) "D"))
-(defun up (n)     (string "\e[" (to-str n) "A"))
-(defun down (n)   (string "\e[" (to-str n) "B"))
-(defun move (l c) (string "\e[" (to-str l) ";" (to-str c) "H"))
+(defun right (n)  (string "\e[" (to-str (to-int n)) "C"))
+(defun left (n)   (string "\e[" (to-str (to-int n)) "D"))
+(defun up (n)     (string "\e[" (to-str (to-int n)) "A"))
+(defun down (n)   (string "\e[" (to-str (to-int n)) "B"))
+(defun move (l c) (string "\e[" (to-str (to-int l)) ";" (to-str (to-int c)) "H"))
 

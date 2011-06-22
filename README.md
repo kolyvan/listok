@@ -155,7 +155,7 @@ It's a Scala-based and need in scala-library.jar to run.
 
 - in argument lists no &key or &options but only &rest parameter
 - in macro definition use backquote instead of quote
-- unable to use `def` inside `do` forms
+
 
 ## planned in nearest future
 

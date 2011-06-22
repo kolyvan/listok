@@ -72,6 +72,19 @@ class DoTest extends FunSuite {
 
    test("dotimes") {
      expect(Lnil){listok.eval("(dotimes (i 0))")}
+
+     expect(LL(Lint(2), Lint(1), Lint(0))){listok.eval(
+       """
+       (def l nil)
+         (do
+         ((i 0 (+ 1 i)))
+         ((eq i 3))
+         (def x)
+         (setf l (cons i l)))
+       l
+       """
+     )}
+
      expect(LL(Lint(2), Lint(1), Lint(0))){listok.eval(
        """
        (def l nil)
@@ -79,6 +92,7 @@ class DoTest extends FunSuite {
        l
        """
      )}
+
      expect(Lint(3)){listok.eval(
        """
        (def n 3)
@@ -88,5 +102,4 @@ class DoTest extends FunSuite {
        """
      )}
    }
-
 }

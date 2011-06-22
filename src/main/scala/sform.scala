@@ -179,16 +179,28 @@ object SpecialForms {
     }
 
     // init env
-    val e = Env('do, env, ll.result, args.result)
+    //val e = Env('do, env, ll.result, args.result)
+    val e = new Env('do, env, Env.values(ll.result, args.result), env.host, env.mailslot) {
+      override protected def redefine(symbol: Symbol) {} // fix problem with def inside
+    }
+
+    val c = code.result
 
     // do loop
     def loop(): Unit =
       if (!Util.isTrue(endtest.eval(e))){
-        Listok.eval(e, code.result)
+        Listok.eval(e, c)
         loop()
        }
-
     loop()
+
+    //var ok = true
+    //while (ok) {
+    //  if (Util.isTrue(endtest.eval(e)))
+    //    ok = false
+    //  else
+    //   LambdaCalculus.makeCall('do, e, Nil, code.result, Nil)
+    //}
 
     result.eval(e)
   }

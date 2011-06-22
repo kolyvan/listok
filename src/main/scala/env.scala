@@ -76,6 +76,12 @@ class Env ( val name: Symbol,
       b.result
     }
 
+  protected def redefine(symbol: Symbol) =
+    if (host.redefine)
+      host.onwarning(this, "Redefining symbol " + symbol)
+    else
+      throw SyntaxError("Redefining symbol " + symbol, this)
+
   protected def defineimpl(symbol: Symbol, value: Lcommon, readonly: Boolean) = {
 
     def done() {
@@ -86,14 +92,8 @@ class Env ( val name: Symbol,
 
     find(symbol) match {
       case -1 => done
-      case x =>
-        if (host.redefine) {
-          host.onwarning(this, "Redefining symbol " + symbol)
-          done
-        }
-        else
-          throw SyntaxError("Redefining symbol " + symbol, this)
-      }
+      case x => redefine(symbol); done
+    }
   }
 
   def define(symbol: Symbol, value: Lcommon) = defineimpl(symbol, value, false)
@@ -282,6 +282,7 @@ object Env {
   def apply(name: Symbol, parent: Env, mailslot: Mailslot) =
     new Env(name, parent, ArrayBuffer.empty, parent.host, mailslot)
 
+  /*
   def apply(name: Symbol, parent: Env, lambda_list: Seq[Symbol]) =
     new Env(name, parent,
         (lambda_list match {
@@ -295,10 +296,33 @@ object Env {
             case Nil => ArrayBuffer.empty
             case xs => ArrayBuffer(xs.map { p => EnvEntry(p._1, p._2, false) } :_* )
         }), parent.host, mailslot)
+  */
+
+  def apply(name: Symbol, parent: Env, ll: Seq[Symbol]) =
+    new Env(name, parent, values(ll, Nil), parent.host, parent.mailslot)
+
+  def apply(name: Symbol, parent: Env, ll: Seq[Symbol], args: Seq[Lcommon], mailslot: Mailslot) =
+      new Env(name, parent, values(ll, args), parent.host, mailslot)
 
   def apply(name: Symbol, parent: Env, ll: Seq[Symbol], args: Seq[Lcommon]): Env =
     apply(name, parent, ll, args, parent.mailslot)
 
+  def values(ll: Seq[Symbol], args: Seq[Lcommon]):ArrayBuffer[EnvEntry] = {
+    if (ll.isEmpty)
+      ArrayBuffer.empty
+    else {
+      val l = ll.iterator
+      val a = args.iterator
+      val b = ArrayBuffer.newBuilder[EnvEntry]
+      while (l.hasNext) {
+        if (a.hasNext)
+          b += EnvEntry(l.next, a.next, false)
+        else
+          b += EnvEntry(l.next, Lnil, false)
+      }
+      b.result
+    }
+  }
 
   def global(host: Host) = {
     val b = ArrayBuffer.newBuilder[EnvEntry]
