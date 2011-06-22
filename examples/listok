@@ -1,7 +1,7 @@
 #!/bin/sh
 
 SOURCE=$0 
-LISTOK=../target/scala-2.9.0.1/listok_2.9.0-0.2.1.jar
+LISTOK=../target/scala-2.9.0.1/listok_2.9.0-0.2.2.jar
 SBINARY=../lib_managed/jar/org.scala-tools.sbinary/sbinary_2.9.0/sbinary_2.9.0-0.4.0.jar
 SCALA=$SCALA_HOME/lib/scala-library.jar
 JAVA_OPTS="-Xmx256M -Xms32M"
