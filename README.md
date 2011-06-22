@@ -63,7 +63,7 @@ It's a Scala-based and need in scala-library.jar to run.
 	
 - \+, \-, \/, \*, <, <=, >, >=, =, \/=, 
 - incr, decr, rem, oddp, evenp, zerop, plusp, minusp
-- min, max, abs
+- min, max, abs, gcd, expt
  
 ### sequences
 

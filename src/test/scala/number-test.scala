@@ -171,4 +171,26 @@ class NumberTest extends FunSuite {
     expect(Lfloat(1.0)){listok.eval("(abs -1.0)")}
     expect(Llong(2147483649l)){listok.eval("(abs -2147483649)")}
   }
+
+  test("gcd") {
+    expect(Lint(2)){listok.eval("(gcd 2)")}
+    expect(Lint(1)){listok.eval("(gcd 2 3)")}
+    expect(Lint(2)){listok.eval("(gcd 4 2)")}
+    expect(Lint(3)){listok.eval("(gcd 99999999999 6666666666)")}
+    expect(Llong(99999999999l)){listok.eval("(gcd 99999999999 99999999999)")}
+  }
+
+  test("expt") {
+    expect(Lint(1)){listok.eval("(expt 2 0)")}
+    expect(Lint(2)){listok.eval("(expt 2 1)")}
+    expect(Lint(4)){listok.eval("(expt 2 2)")}
+    expect(Llong(4294967296l)){listok.eval("(expt 2 32)")}
+
+    expect(Lfloat(1.0)){listok.eval("(expt 2.0 0.0)")}
+    expect(Lfloat(2.0)){listok.eval("(expt 2.0 1.0)")}
+    expect(Lfloat(4.0)){listok.eval("(expt 2.0 2.0)")}
+    expect(Lfloat(2.0)){listok.eval("(expt 4.0 0.5)")}
+    expect(Lfloat(4.294967296E9)){listok.eval("(expt 2 32.0)")}
+
+  }
 }

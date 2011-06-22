@@ -250,19 +250,18 @@ object ModOp extends NumOp[ScalaNumber] {
   def apply(a: Double, b: Double) = { val r = a % b; if (r < 0) r + b else r }
   def apply(a: BigInt, b: BigInt) = a mod b
   def apply(a: Ratio, b: Ratio)   = bugcheck("unimplemented")
-
 }
 
-// def gcd(x: Int, y: Int): Int =
-// if (b == 0) x
-// else gcd(b, x % y)
+object GcdOp extends NumOp[ScalaNumber] {
+  def apply(a: Long, b: Long)     = gcd(a,b)
+  def apply(a: Int, b: Int)       = gcd(a,b)
+  def apply(a: Double, b: Double) = throw TypeError("The value is not of type INTEGER", null)
+  def apply(a: BigInt, b: BigInt) = a gcd b
+  def apply(a: Ratio, b: Ratio)   = throw TypeError("The value is not of type INTEGER", null)
 
-//object GcdOp extends NumOp[ScalaNumber] {
-//  def apply(a: Long, b: Long)     = a gcd b
-//  def apply(a: Int, b: Int)       = a gcd b
-//  def apply(a: Float, b: Float)   = a gcd b
-//  def apply(a: BigInt, b: BigInt) = a gcd b
-//}
+  def gcd(a: Int, b: Int): Int = if (b == 0) a else gcd(b, a % b)
+  def gcd(a: Long, b: Long): Long = if (b == 0) a else gcd(b, a % b)
+}
 
 
 object NumOp {
@@ -301,6 +300,9 @@ object NumOp {
     case err => bugcheck("unexpected argument in numop.add: " + err)
   }
 
+  def calc[R](op: NumOp[R], s: Lnumeric, l: Lnumeric): R = calc(op, s.scalaNumber, l)
+
+  /*
   def calc[R] (op: NumOp[R], s: Lnumeric, l: Lnumeric): R = (s,l) match {
     case (Lint(a), Lint(b))      => op(a, b)
     case (Lint(a), Llong(b))     => op(a.toLong, b)
@@ -334,11 +336,13 @@ object NumOp {
 
     case err => bugcheck("unexpected argument in numop.add: " + err)
   }
+  */
 
   def add(s: ScalaNumber, l: Lnumeric): ScalaNumber = calc(AddOp, s, l)
   def sub(s: ScalaNumber, l: Lnumeric): ScalaNumber = calc(SubOp, s, l)
   def mul(s: ScalaNumber, l: Lnumeric): ScalaNumber = calc(MulOp, s, l)
   def div(s: ScalaNumber, l: Lnumeric): ScalaNumber = calc(DivOp, s, l)
+  def gcd(s: ScalaNumber, l: Lnumeric): ScalaNumber = calc(GcdOp, s, l)
 }
 
 
@@ -503,6 +507,45 @@ object Numbers extends Helpers {
     args.head.castNumeric(env).abs
   }
 
+  def func_gcd(env: Env, args: List[Lcommon]): Lcommon = {
+    if (args == Nil)
+      throw SyntaxError("Invalid number of argument: 0", env)
+
+    try {
+      val a = args.head.castNumeric(env).scalaNumber
+      toLnumeric( args.tail.foldLeft(a){ (s,l) => NumOp.gcd(s, l.castNumeric(env)) })
+    }
+    catch  {
+      case ex: TypeError =>
+        throw TypeError(ex.getMessage, env)
+      case ex: java.lang.ArithmeticException =>
+        throw ArithmeticError(ex.getMessage, env)
+    }
+  }
+
+  def func_expt(env: Env, args: List[Lcommon]): Lcommon = {
+    if (args == Nil)
+      throw SyntaxError("Invalid number of argument: 0", env)
+
+    val x = args.head.castNumeric(env)
+    val y = args(1).castNumeric(env)
+    (x, y) match {
+      case (Lfloat(x), Lfloat(y)) => toLnumeric(scala.math.pow(x,y))
+      case (Lfloat(x), _) => toLnumeric(scala.math.pow(x,y.float))
+      case (_, Lfloat(y)) => toLnumeric(scala.math.pow(x.float,y))
+      case _ =>
+        val n = y.int
+        if (n > 0) {
+          var r = x.scalaNumber
+          for (i <- 1 to n - 1)
+            r = NumOp.mul(r, x)
+          toLnumeric(r)
+        }
+        else
+          Lint(1)
+    }
+  }
+
   val all = List (
     Lfunction(func_add, '+),
     Lfunction(func_sub, '-),
@@ -523,11 +566,10 @@ object Numbers extends Helpers {
     Lfunction(func_minusp, 'minusp),
     Lfunction(func_min, 'min),
     Lfunction(func_max, 'max),
-    Lfunction(func_abs, 'abs)
+    Lfunction(func_abs, 'abs),
+    Lfunction(func_gcd, 'gcd),
+    Lfunction(func_expt, 'expt)
 
-    // gcd lcm
-    // pow
-    // sqrt
     // ++ 1+ 1- --
 
   )
