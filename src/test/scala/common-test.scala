@@ -71,16 +71,16 @@ class CommonTest extends FunSuite {
     expect(Lint(65)) {listok.eval("(to-int #\\A)")}
     expect(Lint(42)) {listok.eval("(to-int \"42\")")}
 
-    expect(Lfloat(42f)) {listok.eval("(to-float 42)")}
-    expect(Lfloat(36.6f)) {listok.eval("(to-float 36.6)")}
-    expect(Lfloat(42f)) {listok.eval("(to-float \"42.0\")")}
+    expect(Lfloat(42.0)) {listok.eval("(to-float 42)")}
+    expect(Lfloat(36.6)) {listok.eval("(to-float 36.6)")}
+    expect(Lfloat(42.0)) {listok.eval("(to-float \"42.0\")")}
 
     expect(LL(Lchar('1'),Lchar('2'))) {listok.eval("(to-list \"12\")")}
     expect(LL(Lint(1),Lint(2))) {listok.eval("(to-list (vector 1 2))")}
     expect(LL(Lpair(Lstring("k"), Lint(1)))) {listok.eval("(to-list (hashmap :k 1))")}
 
     expect(Lint(42)) {listok.eval("(to-number \"42\")")}
-    expect(Lfloat(100.0f)) {listok.eval("(to-number \"100.0\")")}
+    expect(Lfloat(100.0)) {listok.eval("(to-number \"100.0\")")}
     expect(Llong(2147483650l)) {listok.eval("(to-number 2147483650)")}
     expect(Llong(2147483650l)) {listok.eval("(to-number \"2147483650\")")}
   }
@@ -175,7 +175,7 @@ class CommonTest extends FunSuite {
   }
 
   test("symbols") {
-    expect(Lfloat(112f)) {
+    expect(Lfloat(112.0)) {
       listok.eval(
       """
       (def lambda1 111)
@@ -183,7 +183,7 @@ class CommonTest extends FunSuite {
       """)
     }
 
-    expect(Lfloat(112f)) {
+    expect(Lfloat(112.0)) {
       listok.eval(
       """
       (def quote1 111)
@@ -396,7 +396,7 @@ class CommonTest extends FunSuite {
     val l = listok
     expect(Lsymbol('yoda)){l.eval("(defstruct yoda foo bar)")}
     expect(Lsymbol('yoda1)){l.eval("(def yoda1 (make-yoda 3.14 42))")}
-    expect(Lfloat(3.14f)){l.eval("(yoda-foo yoda1)")}
+    expect(Lfloat(3.14)){l.eval("(yoda-foo yoda1)")}
     expect(Lint(42)){l.eval("(yoda-bar yoda1)")}
     expect(Lint(37)){l.eval("(set-yoda-bar yoda1 37)")}
     expect(Lint(37)){l.eval("(yoda-bar yoda1)")}

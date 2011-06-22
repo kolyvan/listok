@@ -50,7 +50,7 @@ abstract class Lseq extends Lcommon {
 }
 
 abstract class Lnumeric extends Latom {
-  def float: Float
+  def float: Double
   def int: Int
   def long: Long
   def bigint: BigInt
@@ -66,7 +66,7 @@ abstract class Lnumeric extends Latom {
 // Lint Llong - fixnum
 
 case class Lint(val int: Int) extends Lnumeric {
-  def float = int.toFloat
+  def float = int.toDouble
   def long = int.toLong
   def bigint = BigInt(int)
   def pp = int.toString
@@ -77,7 +77,7 @@ case class Lint(val int: Int) extends Lnumeric {
 
 case class Llong(val long: Long) extends Lnumeric {
   def int = long.toInt
-  def float = long.toFloat
+  def float = long.toDouble
   def bigint = BigInt(long)
   def pp = long.toString
   def scalaNumber = long
@@ -88,14 +88,14 @@ case class Llong(val long: Long) extends Lnumeric {
 case class Lbignum(val bigint: BigInt) extends Lnumeric {
   def int = bigint.toInt
   def long = bigint.toLong
-  def float = bigint.toFloat
+  def float = bigint.toDouble
   def pp = bigint.toString
   def scalaNumber = bigint
   def negate = Lbignum(-bigint)
   def abs = Lbignum(bigint.abs)
 }
 
-case class Lfloat(val float: Float) extends Lnumeric {
+case class Lfloat(val float: Double) extends Lnumeric {
   def int = float.toInt
   def long = float.toLong
   def bigint = BigInt(int)
@@ -108,7 +108,7 @@ case class Lfloat(val float: Float) extends Lnumeric {
 case class Lratio(val ratio: Ratio) extends Lnumeric {
   def int = ratio.intValue
   def long = ratio.longValue
-  def float = ratio.floatValue
+  def float = ratio.doubleValue
   def bigint = ratio.n / ratio.d
   def pp = ratio.toString
   def scalaNumber = ratio

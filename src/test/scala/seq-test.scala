@@ -11,12 +11,12 @@ class SeqTest extends FunSuite {
   def listok = new Listok
 
   test("builders") {
-    expect(LL(Lint(1),Lfloat(2f),Ltrue,Lchar('y'), Lstring("foo"), Lnil)) {
+    expect(LL(Lint(1),Lfloat(2.0),Ltrue,Lchar('y'), Lstring("foo"), Lnil)) {
       listok.eval("(list 1 2.0 t #\\y \"foo\" nil)")
     }
     expect(Lnil) {listok.eval("(list)")}
 
-    expect(LV(Lint(1),Lfloat(2f),Ltrue,Lchar('y'), Lstring("foo"), Lnil)) {
+    expect(LV(Lint(1),Lfloat(2.0),Ltrue,Lchar('y'), Lstring("foo"), Lnil)) {
       listok.eval("(vector 1 2.0 t #\\y \"foo\" nil)")
     }
     expect(LV()) {listok.eval("(vector)")}

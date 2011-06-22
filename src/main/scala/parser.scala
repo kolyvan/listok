@@ -238,7 +238,7 @@ object Parser extends JavaTokenParsers {
           Some(builtin.Numbers.toLnumeric(BigInt(s)))
       }
       else
-        Some(Lfloat(s.toFloat))
+        Some(Lfloat(s.toDouble))
     }
     else
       None

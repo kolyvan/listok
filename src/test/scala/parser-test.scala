@@ -71,14 +71,13 @@ class ParserTest extends FunSuite {
   }
 
   test ("float") {
-    expect(Lfloat(0f)) {parse1("0.0")}
-    expect(Lfloat(42.42f)) {parse1("42.42")}
-    expect(Lfloat(-42.42f)) {parse1("-42.42")}
-    expect(Lfloat(42.0f)) {parse1("42.0")}
-    expect(Lfloat(42.0f)) {parse1("42f")}
-    expect(Lfloat(-42.0f)) {parse1("-42f")}
-    expect(Lfloat(4200.0f)) {parse1("42e2")}
-    expect(Lfloat(-4200.0f)) {parse1("-42e2")}
+    expect(Lfloat(0.0)) {parse1("0.0")}
+    expect(Lfloat(42.42)) {parse1("42.42")}
+    expect(Lfloat(-42.42)) {parse1("-42.42")}
+    expect(Lfloat(42.0)) {parse1("42.0")}
+    expect(Lfloat(-42.0)) {parse1("-42.0")}
+    expect(Lfloat(4200.0)) {parse1("42e2")}
+    expect(Lfloat(-4200.0)) {parse1("-42e2")}
   }
 
   test ("long") {

@@ -13,7 +13,7 @@ class CompilerTest extends FunSuite {
 
 
   test("sbinary") {
-    val l1 = List(Lint(1), Lfloat(10f), LL(Lstring("foo"), Lchar('x')))
+    val l1 = List(Lint(1), Lfloat(10.0), LL(Lstring("foo"), Lchar('x')))
     expect(l1) { Compiler.load(Compiler.compile(l1)) }
 
     val l2 = List(Lquote(Lint(42)))

@@ -15,7 +15,7 @@ It's a Scala-based and need in scala-library.jar to run.
 ## types
 
 - nil, t
-- int, float
+- int, float, bignum, ratio
 - char, symbol, keyword, pair
 - string, list, vector, hashmap, lazyseq	
 - hashtable
@@ -53,7 +53,7 @@ It's a Scala-based and need in scala-library.jar to run.
 
 - gensym, macroexpand
 
-- to-str, to-char, to-int, to-float, to-list, to-vector
+- to-str, to-char, to-int, to-float, to-number, to-list, to-vector
 
 - atom, listp, null, sequencep, keywordp, numberp, symbolp, functionp,
 - stringp, vectorp, charp, streamp, regexp, 
@@ -161,7 +161,6 @@ It's a Scala-based and need in scala-library.jar to run.
 
 - generic methods
 - values
-- numerical tower (byte, double, long, etc)
 
 ## Build instructions
 

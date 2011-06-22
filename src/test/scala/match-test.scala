@@ -25,7 +25,7 @@ class MatchTest extends FunSuite {
     testFound(Lnil)
     testFound(Ltrue)
     testFound(Lint(1))
-    testFound(Lfloat(1.0f))
+    testFound(Lfloat(1.0))
     testFound(Lquote(Lsymbol('A)), Lsymbol('A))
     testFound(Lkeyword('A))
     testFound(Lchar('A'))
@@ -35,8 +35,8 @@ class MatchTest extends FunSuite {
     testNotFound(Ltrue, Lnil)
     testNotFound(Lint(1), Lint(2))
     testNotFound(Lint(1), Lnil)
-    testNotFound(Lfloat(1.0f), Lfloat(2.0f))
-    testNotFound(Lfloat(1.0f), Lnil)
+    testNotFound(Lfloat(1.0), Lfloat(2.0))
+    testNotFound(Lfloat(1.0), Lnil)
     testNotFound(Lquote(Lsymbol('A)), Lsymbol('B))
     testNotFound(Lquote(Lsymbol('A)), Lnil)
     testNotFound(Lkeyword('A), Lkeyword('B))
@@ -233,7 +233,7 @@ class MatchTest extends FunSuite {
     expect(Lkeyword('int)) {l.eval("(f 42)")}
     expect(Lkeyword('foo)) {l.eval("(f 112)")}
     expect(Lkeyword('bar)) {l.eval("(f 113)")}
-    expect(Lkeyword('float)) {l.eval("(f 3.14f)")}
+    expect(Lkeyword('float)) {l.eval("(f 3.14)")}
     expect(Lkeyword('keyword)) {l.eval("(f :ok)")}
     expect(Lkeyword('string)) {l.eval("(f \"abc\")")}
     expect(Lkeyword('symbol)) {l.eval("(f 'A)")}

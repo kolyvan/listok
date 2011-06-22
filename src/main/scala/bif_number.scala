@@ -24,7 +24,7 @@ package ru.listok.builtin
 import _root_.ru.listok._
 
 import scala.math.{BigInt, ScalaNumber}
-import scala.runtime.{RichInt, RichLong, RichFloat}
+import scala.runtime.{RichInt, RichLong, RichDouble}
 import net.fyrie.ratio.Ratio
 
 // add|sub|mul - these code taken from http://www.java2s.com/
@@ -32,7 +32,7 @@ import net.fyrie.ratio.Ratio
 trait NumOp[R] {
   def apply(a: Long, b: Long): R
   def apply(a: Int, b: Int): R
-  def apply(a: Float, b: Float): R
+  def apply(a: Double, b: Double): R
   def apply(a: BigInt, b: BigInt): R
   def apply(a: Ratio, b: Ratio): R
 }
@@ -95,7 +95,7 @@ object AddOp extends NumOp[ScalaNumber] {
     }
   }
 
-  def apply(a: Float, b: Float): ScalaNumber = a + b
+  def apply(a: Double, b: Double): ScalaNumber = a + b
 
   def apply(a: BigInt, b: BigInt): ScalaNumber = a + b
 
@@ -125,7 +125,7 @@ object SubOp extends NumOp[ScalaNumber] {
       AddOp(a, -b)
   }
 
-  def apply(a: Float, b: Float): ScalaNumber = a - b
+  def apply(a: Double, b: Double): ScalaNumber = a - b
 
   def apply(a: BigInt, b: BigInt): ScalaNumber = a - b
 
@@ -213,7 +213,7 @@ object MulOp extends NumOp[ScalaNumber] {
     }
   }
 
-  def apply(a: Float, b: Float): ScalaNumber = a * b
+  def apply(a: Double, b: Double): ScalaNumber = a * b
 
   def apply(a: BigInt, b: BigInt): ScalaNumber = a * b
 
@@ -223,7 +223,7 @@ object MulOp extends NumOp[ScalaNumber] {
 object DivOp extends NumOp[ScalaNumber] {
   def apply(a: Long, b: Long)     = Ratio(BigInt(a), BigInt(b))
   def apply(a: Int, b: Int)       = Ratio(BigInt(a), BigInt(b))
-  def apply(a: Float, b: Float)   = a / b
+  def apply(a: Double, b: Double) = a / b
   def apply(a: BigInt, b: BigInt) = Ratio(a, b)
   def apply(a: Ratio, b: Ratio)   = a / b
 }
@@ -231,7 +231,7 @@ object DivOp extends NumOp[ScalaNumber] {
 object CmpOp extends NumOp[Int] {
   def apply(a: Long, b: Long)     = a compare b
   def apply(a: Int, b: Int)       = a compare b
-  def apply(a: Float, b: Float)   = a compare b
+  def apply(a: Double, b: Double) = a compare b
   def apply(a: BigInt, b: BigInt) = a compare b
   def apply(a: Ratio, b: Ratio)   = a compare b
 }
@@ -239,7 +239,7 @@ object CmpOp extends NumOp[Int] {
 object RemOp extends NumOp[ScalaNumber] {
   def apply(a: Long, b: Long)     = a % b
   def apply(a: Int, b: Int)       = a % b
-  def apply(a: Float, b: Float)   = a % b
+  def apply(a: Double, b: Double) = a % b
   def apply(a: BigInt, b: BigInt) = a % b
   def apply(a: Ratio, b: Ratio)   = bugcheck("unimplemented") //{ val d = a / b; a - d * b }
 }
@@ -247,7 +247,7 @@ object RemOp extends NumOp[ScalaNumber] {
 object ModOp extends NumOp[ScalaNumber] {
   def apply(a: Long, b: Long)     = { val r = a % b; if (r < 0) r + b else r }
   def apply(a: Int, b: Int)       = { val r = a % b; if (r < 0) r + b else r }
-  def apply(a: Float, b: Float)   = { val r = a % b; if (r < 0) r + b else r }
+  def apply(a: Double, b: Double) = { val r = a % b; if (r < 0) r + b else r }
   def apply(a: BigInt, b: BigInt) = a mod b
   def apply(a: Ratio, b: Ratio)   = bugcheck("unimplemented")
 
@@ -270,32 +270,32 @@ object NumOp {
   def calc[R] (op: NumOp[R], s: ScalaNumber, l: Lnumeric): R = (s,l) match {
     case (a: RichInt, Lint(b))     => op(a.intValue, b)
     case (a: RichInt, Llong(b))    => op(a.toLong, b)
-    case (a: RichInt, Lfloat(b))   => op(a.toFloat, b)
+    case (a: RichInt, Lfloat(b))   => op(a.toDouble, b)
     case (a: RichInt, Lbignum(b))  => op(BigInt(a.intValue), b)
     case (a: RichInt, Lratio(b))   => op(Ratio(a.intValue), b)
 
     case (a: RichLong, Lint(b))    => op(a.longValue, b.toLong)
     case (a: RichLong, Llong(b))   => op(a.longValue, b)
-    case (a: RichLong, Lfloat(b))  => op(a.toFloat, b)
+    case (a: RichLong, Lfloat(b))  => op(a.toDouble, b)
     case (a: RichLong, Lbignum(b)) => op(BigInt(a.longValue), b)
     case (a: RichLong, Lratio(b))  => op(Ratio(a.longValue), b)
 
-    case (a: RichFloat, Lint(b))   => op(a.floatValue, b.toFloat)
-    case (a: RichFloat, Llong(b))  => op(a.floatValue, b.toFloat)
-    case (a: RichFloat, Lfloat(b)) => op(a.floatValue, b.toFloat)
-    case (a: RichFloat, Lbignum(b))=> op(a.floatValue, b.toFloat)
-    case (a: RichFloat, Lratio(b)) => op(a.floatValue, b.toFloat)
+    case (a: RichDouble, Lint(b))   => op(a.doubleValue, b.toDouble)
+    case (a: RichDouble, Llong(b))  => op(a.doubleValue, b.toDouble)
+    case (a: RichDouble, Lfloat(b)) => op(a.doubleValue, b.toDouble)
+    case (a: RichDouble, Lbignum(b))=> op(a.doubleValue, b.toDouble)
+    case (a: RichDouble, Lratio(b)) => op(a.doubleValue, b.toDouble)
 
     case (a: BigInt, Lint(b))      => op(a, BigInt(b))
     case (a: BigInt, Llong(b))     => op(a, BigInt(b))
     case (a: BigInt, Lbignum(b))   => op(a, b)
-    case (a: BigInt, Lfloat(b))    => op(a.toFloat, b)
+    case (a: BigInt, Lfloat(b))    => op(a.toDouble, b)
     case (a: BigInt, Lratio(b))    => op(Ratio(a), b)
 
     case (a: Ratio, Lint(b))       => op(a, Ratio(b))
     case (a: Ratio, Llong(b))      => op(a, Ratio(b))
     case (a: Ratio, Lbignum(b))    => op(a, Ratio(b))
-    case (a: Ratio, Lfloat(b))     => op(a.toFloat, b)
+    case (a: Ratio, Lfloat(b))     => op(a.toDouble, b)
     case (a: Ratio, Lratio(b))     => op(a, b)
 
     case err => bugcheck("unexpected argument in numop.add: " + err)
@@ -304,32 +304,32 @@ object NumOp {
   def calc[R] (op: NumOp[R], s: Lnumeric, l: Lnumeric): R = (s,l) match {
     case (Lint(a), Lint(b))      => op(a, b)
     case (Lint(a), Llong(b))     => op(a.toLong, b)
-    case (Lint(a), Lfloat(b))    => op(a.toFloat, b)
+    case (Lint(a), Lfloat(b))    => op(a.toDouble, b)
     case (Lint(a), Lbignum(b))   => op(BigInt(a), b)
     case (Lint(a), Lratio(b))    => op(Ratio(a), b)
 
     case (Llong(a), Lint(b))     => op(a, b.toLong)
     case (Llong(a), Llong(b))    => op(a, b)
-    case (Llong(a), Lfloat(b))   => op(a.toFloat, b)
+    case (Llong(a), Lfloat(b))   => op(a.toDouble, b)
     case (Llong(a), Lbignum(b))  => op(BigInt(a), b)
     case (Llong(a), Lratio(b))   => op(Ratio(a), b)
 
-    case (Lfloat(a), Lint(b))    => op(a, b.toFloat)
-    case (Lfloat(a), Llong(b))   => op(a, b.toFloat)
-    case (Lfloat(a), Lfloat(b))  => op(a, b.toFloat)
-    case (Lfloat(a), Lbignum(b)) => op(a, b.toFloat)
-    case (Lfloat(a), Lratio(b))  => op(a, b.toFloat)
+    case (Lfloat(a), Lint(b))    => op(a, b.toDouble)
+    case (Lfloat(a), Llong(b))   => op(a, b.toDouble)
+    case (Lfloat(a), Lfloat(b))  => op(a, b.toDouble)
+    case (Lfloat(a), Lbignum(b)) => op(a, b.toDouble)
+    case (Lfloat(a), Lratio(b))  => op(a, b.toDouble)
 
     case (Lbignum(a), Lint(b))   => op(a, BigInt(b))
     case (Lbignum(a), Llong(b))  => op(a, BigInt(b))
     case (Lbignum(a), Lbignum(b))=> op(a, b)
-    case (Lbignum(a), Lfloat(b)) => op(a.toFloat, b)
+    case (Lbignum(a), Lfloat(b)) => op(a.toDouble, b)
     case (Lbignum(a), Lratio(b)) => op(Ratio(a), b)
 
     case (Lratio(a), Lint(b))    => op(a, Ratio(b))
     case (Lratio(a), Llong(b))   => op(a, Ratio(b))
     case (Lratio(a), Lbignum(b)) => op(a, Ratio(b))
-    case (Lratio(a), Lfloat(b))  => op(a.toFloat, b)
+    case (Lratio(a), Lfloat(b))  => op(a.toDouble, b)
     case (Lratio(a), Lratio(b))  => op(a, b)
 
     case err => bugcheck("unexpected argument in numop.add: " + err)
@@ -357,7 +357,7 @@ object Numbers extends Helpers {
     case l: RichLong if l.isValidInt => Lint(l.toInt)
     case l: RichLong => Llong(l.longValue)
     case i: RichInt => Lint(i.intValue)
-    case f: RichFloat => Lfloat(f.floatValue)
+    case f: RichDouble => Lfloat(f.doubleValue)
 
     case err => bugcheck("unable cast to unexpected number " + err)
   }

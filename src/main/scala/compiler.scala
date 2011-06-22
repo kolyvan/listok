@@ -63,7 +63,7 @@ object Compiler extends DefaultProtocol {
       read[Byte](in) match {
         case 0  => Lchar(read[Char](in))
         case 1  => Lint(read[Int](in))
-        case 2  => Lfloat(read[Float](in))
+        case 2  => Lfloat(read[Double](in))
         case 3  => Lstring(read[String](in))
         case 4  => Llist(readLL)
         case 5  => Lquote(reads(in))
