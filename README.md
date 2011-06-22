@@ -30,7 +30,8 @@ It's a Scala-based and need in scala-library.jar to run.
 - def, defconstant, defun, defstruct, setf, 
 - if, cond, do, and, or
 - spawn, match
- 
+- collect
+
 
 ## macro
 	
@@ -149,6 +150,13 @@ It's a Scala-based and need in scala-library.jar to run.
     (def primes (sieve (lazyseq-from 2)))  
     (to-list (take primes 10))
 
+
+### collect
+
+    (def s (open (string (current-directory) "/src/test/resources/test.file" )))
+    (assert s)
+    (print (collect (dowhile (<< (read-line s)))))
+    (close s)
 
 
 ## limitation

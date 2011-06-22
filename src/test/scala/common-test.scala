@@ -418,5 +418,19 @@ class CommonTest extends FunSuite {
     l.debug_ = false
     expect(Lnil){l.eval("""(assert nil "test assert")""")}
   }
+
+  test("collect") {
+    expect(LL(Lint(1),Lint(2))){listok.eval("(collect (<< 1) (<< 2))")}
+    expect(LL(Lint(1),Lint(2))){listok.eval("(collect (doseq (l (list 1 2)) (<< l)))")}
+    expect(LL(Lint(0),Lint(1),Lint(2))){listok.eval("(collect (dotimes (n 3) (<< n)))")}
+
+    //listok.eval("""
+    //  (def s (open (string (current-directory) "/src/test/resources/test.file" )))
+    //  (assert s)
+    //  (print (collect (dowhile (<< (read-line s)))))
+    //  (close s)
+    //""")
+  }
+
 }
 

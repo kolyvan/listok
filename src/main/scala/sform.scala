@@ -310,6 +310,27 @@ object SpecialForms {
     Lnil
   }
 
+  def form_collect(env: Env, l: List[Lcommon]): Lcommon = {
+
+    var result: List[Lcommon] = Nil
+    val name = Symbol("<<")
+    val fn = Lfunction((_: Env, xs: List[Lcommon]) => {
+        result ++= xs
+        xs match {
+          case Nil => Lnil
+          case x::Nil => x
+          case _ => Llist(xs)
+        }
+      }, name)
+
+    Listok.eval(Env('collect, env, List(name), List(fn)), l)
+
+    if (result.isEmpty)
+      Lnil
+    else
+      Llist(result)
+  }
+
   def make(name: Symbol) = name match {
     case 'def => Lsform(form_define _, name)
     case 'defconstant => Lsform(form_defconstant _, name)
@@ -324,6 +345,7 @@ object SpecialForms {
     case 'match => Lsform(form_match _, name)
     case 'defstruct => Lsform(form_defstruct _, name)
     case 'assert => Lsform(form_assert _, name)
+    case 'collect => Lsform(form_collect _, name)
     case _ => bugcheck("unable make unknown sform: " + name)
   }
 
