@@ -217,9 +217,8 @@ object Util {
     case l: Long => Llong(l)
     case f: Float => Lfloat(f.toDouble)
     case d: Double => Lfloat(d)
-   // case bi: BigInt => Lbignum(bi)
-   // case r: Ratio => Lratio(r)
-    case n: ScalaNumber => builtin.Numbers.toLnumeric(n)
+    case n: ScalaNumber => builtin.Numbers.toLnumeric(n) // case bi: BigInt => Lbignum(bi)
+                                                         // case r: Ratio => Lratio(r)
     case s: String => Lstring(s)
     case s: Symbol => Lkeyword(s)
     case c: Char => Lchar(c)
@@ -231,15 +230,26 @@ object Util {
     case m: Map[_, _] => toLhashmap(m.toSeq :_*)
     case x: Lcommon => x
     case null => Lnil
-    case err =>
-      bugcheck("Unable convert from " +err+ " to listok type")
-      //Lnil
+    case _ => Lwrapper(x.asInstanceOf[AnyRef])
+    // case err => bugcheck("Unable convert from " +err+ " to listok type")
   }
 
   def toLlist(l: Any*) = Llist(l.map(toLcommon).toList)
   def toLvector(l: Any*) = Lvector(ArraySeq( l.map(toLcommon):_* ))
   def toLhashmap(l: (Any, Any)*) = Lhashmap(Map(l.map { p => (p._1.toString -> toLcommon(p._2))} :_*))
 
+  def toStr(x: Lcommon) = x match {
+    case Lnil => ""
+    case Ltrue => "t"
+    case n: Lnumeric => n.scalaNumber.toString
+    case Lchar(c) => c.toString
+    case Lstring(s) => s
+    case Lkeyword(k) => Util.pp(k)
+    case ls: Lseq => Lstring("").make(ls.seq).str
+    case Lregex(s) => s
+    case Lwrapper(obj) => obj.toString
+    case _ => x.pp
+  }
 }
 
 

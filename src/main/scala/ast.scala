@@ -122,19 +122,12 @@ case class Lchar(val char: Char) extends Latom {
 
 case class Lstring(val str: String) extends Lseq {
   def pp = "\"" + str + "\""
-  def cons(x: Lcommon): Lstring = Lstring(toStr(x) + str)
+  def cons(x: Lcommon): Lstring = Lstring(Util.toStr(x) + str)
   def seq: Seq[Lcommon] = str.map { Lchar(_) }
-  def make(s: Seq[Lcommon]): Lstring = Lstring(s.foldLeft("")(_ + toStr(_)))
+  def make(s: Seq[Lcommon]): Lstring = Lstring(s.foldLeft("")(_ + Util.toStr(_)))
   def empty: Lstring = Lstring("")
   override def isEmpty = str.isEmpty
   override def length = str.length
-
-  def toStr(x: Lcommon) = x match {
-    case Lchar(ch) => ch.toString
-    case Lstring(s) => s
-    case Lkeyword(s) => Util.pp(s)
-    case _ => x.pp
-  }
 }
 
 object LL {
@@ -420,3 +413,8 @@ case class Llazyseq(val seq: Stream[Lcommon]) extends Lseq {
 case class Lprocess(cmd: String, process: Process) extends  Lruntime {
   def pp = "#<process " + cmd  + ">"
 }
+
+case class Lwrapper(obj: AnyRef) extends  Lruntime {
+  def pp = "#<wrapper " + obj  + ">"
+}
+

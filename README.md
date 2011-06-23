@@ -10,7 +10,8 @@ It's a Scala-based and need in scala-library.jar to run.
 - tail-call optimization
 - regex and pattern matching
 - concurrency via threads and mailslots
-- lazy sequences 
+- lazy sequences
+- java interop
 
 ## types
 
@@ -158,6 +159,12 @@ It's a Scala-based and need in scala-library.jar to run.
     (print (collect (dowhile (<< (read-line s)))))
     (close s)
 
+### interop
+
+    (interop "java.io.File" 'make-file :constructor)
+    (interop "java.io.File.getAbsolutePath" 'file/path)
+    (file/path (make-file "."))
+
 
 ## limitation
 
@@ -167,8 +174,8 @@ It's a Scala-based and need in scala-library.jar to run.
 
 ## planned in nearest future
 
-- generic methods
-- values
+- byte type and blobs
+
 
 ## Build instructions
 

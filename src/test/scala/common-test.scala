@@ -56,7 +56,7 @@ class CommonTest extends FunSuite {
 
   test("convert") {
     expect(Lstring("")) {listok.eval("(to-str nil)")}
-    expect(Lstring("true")) {listok.eval("(to-str t)")}
+    expect(Lstring("t")) {listok.eval("(to-str t)")}
     expect(Lstring("42")) {listok.eval("(to-str 42)")}
     expect(Lstring("36.6")) {listok.eval("(to-str 36.6)")}
     expect(Lstring("A")) {listok.eval("(to-str #\\A)")}
@@ -85,7 +85,7 @@ class CommonTest extends FunSuite {
     expect(Llong(2147483650l)) {listok.eval("(to-number \"2147483650\")")}
   }
 
-   test("predicat") {
+  test("predicat") {
     expect(Ltrue) {listok.eval("(atom nil)")}
     expect(Ltrue) {listok.eval("(atom t)")}
     expect(Ltrue) {listok.eval("(atom 1)")}

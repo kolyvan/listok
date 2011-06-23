@@ -29,10 +29,11 @@ object Parser extends JavaTokenParsers {
   override def stringLiteral: Parser[String] =
     ("\""+"""([^"\p{Cntrl}\\]|\\[\\/bfnrte]|\\u[a-fA-F0-9]{4})*"""+"\"").r  // added \e
 
+  // todo: list_ident is obsolete - remove it
   lazy val list_ident = """[a-zA-Z_~%!=<>\-\+\*\?\^\&\/]([a-zA-Z_@~%!:=#<>\-\+\*\?\^\&\d])*""".r
 
   lazy val list_keyword = """:([a-zA-Z_~%!=#<>\-\+\*\?\^\&\d])*""".r
-  lazy val list_symbol = """[a-zA-Z_~%!=<>\-\+\*\?\^\&\/\d\.]([a-zA-Z_~%!=<>:@#\-\+\*\?\^\&\d\.])*""".r
+  lazy val list_symbol = """[a-zA-Z_~%!=<>\-\+\*\?\^\&\/\d\.]([a-zA-Z_~%!=<>:@#\-\+\*\?\^\&\/\d\.])*""".r
 
   lazy val lparen: Parser[String] = "("
   lazy val rparen: Parser[String] = ")"

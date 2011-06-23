@@ -140,6 +140,15 @@ trait Typecast { self: Lcommon =>
     case s: Lseq => s.seq.map(_.getAny)
     case Lnil => Nil
     case Ltrue => true
+    case Lquote(x) => x.getAny
+    case Lhashtable(m) => m.map(p => (p._1.getAny, p._2.getAny))
+    case Lthread(t) => t
+    case r: Lregex => r.pattern
+    case Lprocess(cmd, p) => p
+    case Lwrapper(x) => x
+   // case Lstream => ?
+   // case Lstruct(_, m) => ?
+   // case Llazyseq(s) => ?
     case x => x.pp
   }
 

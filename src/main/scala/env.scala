@@ -335,6 +335,7 @@ object Env {
     builtin.Regex.all.foreach       { x => b += EnvEntry(x.name, x, true) }
     Macro.all.foreach               { x => b += EnvEntry(x.name, x, true) }
     Concurrent.all.foreach          { x => b += EnvEntry(x.name, x, true) }
+    Interop.all.foreach             { x => b += EnvEntry(x.name, x, true) }
 
 
    val con = Lstream(Console.in, Console.out)

@@ -159,10 +159,6 @@ object Common extends Helpers {
         Lfunction(
           (env2: Env, l2: List[Lcommon]) => f.lapply(env2, l.tail ::: l2),
           'curry)
-    //  case f:Ltcofunction  =>
-    //    Lfunction(
-    //      (env2: Env, l2: List[Lcommon]) => f.lapply(env2, l.tail ::: l2),
-    //      'curry)
       case err => throw TypeError(err.pp + " can't be converted to type STRING", env)
     }
   }
@@ -171,18 +167,7 @@ object Common extends Helpers {
 
   def func_tostr(env: Env, l: List[Lcommon]): Lcommon = {
     mustEqual(env, l, 1)
-    l.head match {
-      case Lnil => Lstring("")
-      case Ltrue => Lstring("true")
-      case Lint(i) => Lstring(i.toString)
-      case Lfloat(f) => Lstring(f.toString)
-      case Lchar(c) => Lstring(c.toString)
-      case s: Lstring => s
-      case Lkeyword(k) => Lstring(Util.pp(k))
-      case ls: Lseq => Lstring("").make(ls.seq)
-      case Lregex(s) => Lstring(s)
-      case err => throw TypeError(err.pp + " can't be converted to type STRING", env)
-    }
+    Lstring(Util.toStr(l.head))
   }
 
    def func_tochar(env: Env, l: List[Lcommon]): Lcommon = {

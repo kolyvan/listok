@@ -4,11 +4,9 @@ import _root_.ru.listok._
 import org.scalatest.FunSuite
 
 
-class TempTest extends FunSuite {
+class TempTest extends FunSuite with Helper {
 
   import Util.toLlist
-
-  def listok = new Listok
 
   /*
   test("trace") {
