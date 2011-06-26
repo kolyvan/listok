@@ -23,7 +23,9 @@ package ru.listok
 
 import collection.mutable.ArraySeq
 import net.fyrie.ratio.Ratio
-import math.{ScalaNumber, ScalaNumericConversions, BigInt}
+import math.{ScalaNumber}
+import java.lang.String
+
 
 object Util {
 
@@ -211,7 +213,7 @@ object Util {
   //
 
   def toLcommon(x: Any): Lcommon = x match {
-    case b: Byte => Lint(b.toInt)
+    case b: Byte => Lbyte(b)
     case s: Short => Lint(s.toInt)
     case i: Int => Lint(i)
     case l: Long => Llong(l)
@@ -226,6 +228,7 @@ object Util {
     case Nil => Lnil
     case (a,b) => Lpair(toLcommon(a),toLcommon(b))
     case l: List[_] => toLlist(l:_*)
+    case b: Array[Byte] => Lblob(b)
     case a: Array[_] => toLvector(a:_*)
     case m: Map[_, _] => toLhashmap(m.toSeq :_*)
     case x: Lcommon => x
@@ -243,11 +246,13 @@ object Util {
     case Ltrue => "t"
     case n: Lnumeric => n.scalaNumber.toString
     case Lchar(c) => c.toString
+    case Lbyte(b) => b.toString
     case Lstring(s) => s
     case Lkeyword(k) => Util.pp(k)
     case ls: Lseq => Lstring("").make(ls.seq).str
     case Lregex(s) => s
     case Lwrapper(obj) => obj.toString
+    case Lblob(b) => new String(b, "UTF-8")
     case _ => x.pp
   }
 }

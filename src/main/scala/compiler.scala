@@ -54,6 +54,8 @@ object Compiler extends DefaultProtocol {
         case Llong(l)     => writeSign(15); write(out, l)
         case Lbignum(b)   => writeSign(16); write(out, b)
         case Lratio(r)    => writeSign(17); write(out, r.n); write(out, r.d)
+        case Lbyte(b)     => writeSign(18); write(out, b)
+        case Lblob(bb)    => writeSign(19); write(out, bb)
         case x => bugcheck("can't write an unknown lcommon type: " + x.pp)
         }
       }
@@ -79,6 +81,8 @@ object Compiler extends DefaultProtocol {
         case 15 => Llong(read[Long](in))
         case 16 => Lbignum(read[BigInt](in))
         case 17 => Lratio(Ratio(read[BigInt](in), read[BigInt](in)))
+        case 18 => Lbyte(read[Byte](in))
+        case 19 => Lblob(read[Array[Byte]](in))
         case x => bugcheck("can't read an unknown lcommon type: " + x)
       }
     }
@@ -95,6 +99,3 @@ object Compiler extends DefaultProtocol {
     fromByteArray[List[Lcommon]](bytes)
   }
 }
-
-
-

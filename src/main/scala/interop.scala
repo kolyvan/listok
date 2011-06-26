@@ -78,9 +78,9 @@ object Interop extends ru.listok.builtin.Helpers {
 
   def callFunc (obj: AnyRef, clazz: Class[_], name: String, l: List[Lcommon]): Lcommon = {
 
-    if (l.isEmpty) {
+    // log(" for " + obj + " call " + clazz.getName + "." + name + " " + Util.pp(l))
 
-      // log("try call " + clazz.getName + "." + name + " for " + obj)
+    if (l.isEmpty) {
 
       val mm = clazz.getMethods.filter { m =>
         m.getName == name && m.getParameterTypes.isEmpty }
@@ -120,6 +120,7 @@ object Interop extends ru.listok.builtin.Helpers {
   }
 
  def toJava(x: Any): AnyRef = x match {
+    case x: Byte => Byte.box(x)
     case x: Char => Char.box(x)
     case x: Int => Int.box(x)
     case x: Long => Long.box(x)
@@ -132,6 +133,7 @@ object Interop extends ru.listok.builtin.Helpers {
   }
 
  def fromJava(x: Any) = Util.toLcommon(x match {
+    case x: java.lang.Byte      => x.byteValue
     case x: java.lang.Character => x.charValue
     case x: java.lang.Integer   => x.intValue
     case x: java.lang.Long      => x.longValue
@@ -180,7 +182,7 @@ object Interop extends ru.listok.builtin.Helpers {
 
           case 'method =>
             (env: Env, l: List[Lcommon]) => {
-              mustEqual(env, l, 1)
+              notLess(env, l, 1)
               guard(env, jname){callFunc(toJava(l.head.getAny), clazz, mname, l.tail)}
             }
 

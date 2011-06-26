@@ -110,6 +110,16 @@ trait Typecast { self: Lcommon =>
       case err => throw TypeError("The value " + err + " is not of type NUMBER", env)
     }
 
+  def castByte(env: Env) = self match {
+      case b: Lbyte => b
+      case err => throw TypeError("The value " + err + " is not of type BYTE", env)
+    }
+
+  def castBlob(env: Env) = self match {
+      case b: Lblob => b
+      case err => throw TypeError("The value " + err + " is not of type BLOB", env)
+    }
+
   def getString(env: Env) = self match {
     case Lstring(s) => s
     case Lkeyword(k) => Util.pp(k)
@@ -146,6 +156,8 @@ trait Typecast { self: Lcommon =>
     case r: Lregex => r.pattern
     case Lprocess(cmd, p) => p
     case Lwrapper(x) => x
+    case Lbyte(b) => b
+    case Lblob(a) => a
    // case Lstream => ?
    // case Lstruct(_, m) => ?
    // case Llazyseq(s) => ?

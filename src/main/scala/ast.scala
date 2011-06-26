@@ -59,10 +59,6 @@ abstract class Lnumeric extends Latom {
   def abs: Lnumeric
 }
 
-//case class Lbyte(val byte: Byte) extends Latom {
-  //def pp = byte.toString
-//}
-
 // Lint Llong - fixnum
 
 case class Lint(val int: Int) extends Lnumeric {
@@ -283,8 +279,8 @@ case class Lstream ( val reader: BufferedReader, val writer: PrintStream,
     case _ => 'io
   }
 
-  def canRead = reader != null
-  def canWrite = writer != null
+  def canRead = reader != null || in != null
+  def canWrite = writer != null || out != null
   def isClosed = closed
 
   def close {
@@ -418,3 +414,22 @@ case class Lwrapper(obj: AnyRef) extends  Lruntime {
   def pp = "#<wrapper " + obj  + ">"
 }
 
+case class Lbyte(byte: Byte) extends Latom {
+  def pp = byte.toString
+}
+
+case class Lblob(bytes: Array[Byte]) extends Latom {
+  def pp = "#<blob size " + bytes.length + ">"
+
+  override def hashCode = {   // fail if use blob as key in hashmaps because blob is mutable
+    val h = new util.MurmurHash[Byte]("blob".hashCode)
+    bytes.foreach(h)
+    h.hash
+  }
+
+  override def equals(in: Any): Boolean = in match {
+    case Lblob(x) => x.sameElements(bytes)
+    case _ => false
+  }
+
+}

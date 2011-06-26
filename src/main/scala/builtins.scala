@@ -23,6 +23,7 @@ package ru.listok.builtin
 
 import ru.listok._
 import util.parsing.json.JSON
+import scala.collection.mutable.ArraySeq
 
 trait Helpers {
 
@@ -173,7 +174,9 @@ object Common extends Helpers {
    def func_tochar(env: Env, l: List[Lcommon]): Lcommon = {
     mustEqual(env, l, 1)
     l.head match {
-      case Lint(i) => Lchar(i.toChar)
+      //case Lint(i) => Lchar(i.toChar)
+      case n: Lnumeric => Lchar(n.int.toChar)
+      case Lbyte(b) => Lchar(b.toChar)
       case ch: Lchar => ch
       case err => throw TypeError(err.pp + " can't be converted to type CHAR", env)
     }
@@ -185,6 +188,7 @@ object Common extends Helpers {
       case Lnil => Lint(0)
       case Ltrue => Lint(1)
       case Lchar(c) => Lint(c.toInt)
+      case Lbyte(b) => Lint(b.toInt)
       case n: Lnumeric => Lint(n.int)
       case Lstring(s) =>
         Parser.isNumber(s) match {
@@ -229,6 +233,7 @@ object Common extends Helpers {
     l.head match {
       case s:Lseq if s.isEmpty  => Lnil
       case s:Lseq  => Llist(s.seq.toList)
+      case Lblob(b) => Llist(b.map{Lbyte(_)}.toList)
      // case s: Lstruct => s.fields
       case err => throw TypeError(err.pp + " can't be converted to type STRING", env)
     }
@@ -237,7 +242,8 @@ object Common extends Helpers {
   def func_tovector(env: Env, l: List[Lcommon]): Lcommon = {
     mustEqual(env, l, 1)
     l.head match {
-      case s:Lseq  => Lvector(scala.collection.mutable.ArraySeq(s.seq:_*))
+      case s:Lseq  => Lvector(ArraySeq(s.seq:_*))
+      case Lblob(b) => Lvector(ArraySeq(b.map{Lbyte(_)}:_*))
       case err => throw TypeError(err.pp + " can't be converted to type VECTOR", env)
     }
   }
@@ -410,6 +416,22 @@ object Common extends Helpers {
     }
   }
 
+  def func_bytep(env: Env, l: List[Lcommon]): Lcommon = {
+    mustEqual(env, l, 1)
+    l.head match {
+      case x: Lbyte => Ltrue
+      case _ => Lnil
+    }
+  }
+
+   def func_blobp(env: Env, l: List[Lcommon]): Lcommon = {
+    mustEqual(env, l, 1)
+    l.head match {
+      case x: Lblob => Ltrue
+      case _ => Lnil
+    }
+  }
+
  ///
 
   def func_format(env: Env, l: List[Lcommon]): Lcommon = {
@@ -443,6 +465,16 @@ object Common extends Helpers {
     }
   }
 
+  //
+
+  def func_byte(env: Env, l: List[Lcommon]): Lcommon = {
+    mustEqual(env, l, 1)
+    Lbyte(Blob.toByte(env, l.head))
+  }
+
+  def func_blob(env: Env, l: List[Lcommon]): Lcommon = {
+    Lblob(Blob.toBytes(env, l))
+  }
 
  ///
 
@@ -491,10 +523,15 @@ object Common extends Helpers {
     Lfunction(func_structp, 'structp),
     Lfunction(func_lazyseqp, 'lazyseqp),
     Lfunction(func_pairp, 'pairp),
+    Lfunction(func_bytep, 'bytep),
+    Lfunction(func_blobp, 'blobp),
 
     Lfunction(func_format, 'format),
     Lfunction(func_gensym, 'gensym),
-    Lfunction(func_macroexpand, 'macroexpand)
+    Lfunction(func_macroexpand, 'macroexpand),
+
+    Lfunction(func_byte, 'byte),
+    Lfunction(func_blob, 'blob)
 
   )
 

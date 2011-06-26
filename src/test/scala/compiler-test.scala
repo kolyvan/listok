@@ -55,6 +55,12 @@ class CompilerTest extends FunSuite {
 
     val l12 = List(Lratio(Ratio(13, 27)))
     expect(l12) { Compiler.load(Compiler.compile(l12)) }
+
+    val l13 = List(Lbyte(65))
+    expect(l13) { Compiler.load(Compiler.compile(l13)) }
+
+    val l14 = List(Lblob(Array(1.toByte, 65.toByte, 127.toByte, 255.toByte, 2.toByte)))
+    expect(l14) { Compiler.load(Compiler.compile(l14)) }
   }
 
   test("compile") {

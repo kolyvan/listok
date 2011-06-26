@@ -54,6 +54,7 @@ object Sequences extends Helpers {
     args.head match {
       case Lnil => Lint(0)
       case s: Lseq => Lint(s.length)
+      case Lblob(b) => Lint(b.length)
       case err => throw TypeError("The value " + err + " is not sequence", env)
     }
   }
@@ -145,6 +146,10 @@ object Sequences extends Helpers {
         if (index >= s.length)
           throw SyntaxError("The index " + index + " is too large.", env)
         s.seq(index)
+      case Lblob(a) =>
+        if (index >= a.length)
+          throw SyntaxError("The index " + index + " is too large.", env)
+        Lbyte(a(index))
       case err => throw TypeError("The value " + err + " is not sequence", env)
     }
   }
@@ -155,10 +160,17 @@ object Sequences extends Helpers {
     val value = args(2)
     args.head match {
       case Lnil => throw SyntaxError("The index " + index + " is too large.", env)
+
       case Lvector(a) =>
         if (index >= a.length)
           throw SyntaxError("The index " + index + " is too large.", env)
         a(index) = value
+
+      case Lblob(a) =>
+        if (index >= a.length)
+          throw SyntaxError("The index " + index + " is too large.", env)
+        a(index) = Blob.toByte(env, value)
+
       case err => throw TypeError("The value " + err + " is not of type VECTOR", env)
     }
     value

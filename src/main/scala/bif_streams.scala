@@ -83,7 +83,29 @@ object Streams extends Helpers {
     finally { fs.close }
   }
 
-  // def readByte = in.read match {}
+  def readByte(in: InputStream) = in.read match {
+    case -1 => Lnil
+    case x => Lbyte(x.toByte)
+  }
+
+  def readBlob(in: InputStream) = {
+    val b = readBytes(in)
+    if (b.isEmpty) Lnil
+    else Lblob(b)
+  }
+
+  def readBlob(in: InputStream, numBytes: Int) = {
+    val bytes = new Array[Byte](numBytes)
+    in.read(bytes) match {
+      case -1 => Lnil
+      case `numBytes` => Lblob(bytes)
+      case x =>
+        val t = new Array[Byte](x)
+        bytes.copyToArray(t, 0, x)
+        Lblob(t)
+    }
+  }
+
 
   def readObject(reader: BufferedReader): Lcommon = reader.readLine match {
     case null => Lnil
@@ -115,13 +137,18 @@ object Streams extends Helpers {
     case x => Lstring(x)
   }
 
-  // def writeByte
+  // def writeByte(out: OutputStream, b: Int) = out.write(b)
+  // def writeBytes
+
+
   def writeObject(writer: PrintStream, x:Lcommon) = {writer.print(x.pp);x }
   def writeChar(writer: PrintStream, x: Lchar) = {writer.print(x.char);x}
   def writeString(writer: PrintStream, x: Lstring) = {writer.print(x.str);x}
   def writeLine(writer: java.io.PrintStream, x: Lstring) = {writer.println(x.str);x}
   def newline(writer: java.io.PrintStream) = {writer.println();Lnil}
 
+  def fileInputStream(path: String) = new FileInputStream(new File(path))
+  def fileOutputStream(path:String) = new FileOutputStream(new File(path))
   def fileBufferedReader(path: String) = new BufferedReader(new FileReader(new File(path)))
   def filePrintStream(path:String) = new PrintStream(new FileOutputStream(new File(path)))
   def byteArrayBufferedReader(bytes: Array[Byte]) = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(bytes)))
@@ -173,18 +200,37 @@ object Streams extends Helpers {
 
   def func_open(env: Env, args: List[Lcommon]): Lcommon = {
     notLess(env, args, 1)
+
     val path = args.head.getString(env)
-    val direction = if (args.length == 2)
+
+    val direction = if (args.length > 1)
         args(1).castKeyword(env).sym
       else 'input
 
-    io(env){
-      direction match {
-        case 'input  => Lstream(fileBufferedReader(path), null)
-        case 'output => Lstream(null, filePrintStream(path))
-        case 'io     => Lstream(fileBufferedReader(path), filePrintStream(path))
-        case err => throw SyntaxError("The value " + err + " is not valid direction", env)
+    val mode = if (args.length > 2)
+      args(2).castKeyword(env).sym
+      else 'text
+
+    if (mode == 'text) {
+      io(env){
+        direction match {
+          case 'input  => Lstream(fileBufferedReader(path), null)
+          case 'output => Lstream(null, filePrintStream(path))
+          case 'io     => Lstream(fileBufferedReader(path), filePrintStream(path))
+          case err => throw SyntaxError("The value " + err + " is not valid direction", env)
+        }
       }
+    } else { //if (mode == 'binary)
+
+      io(env){
+        direction match {
+          case 'input  => Lstream(null, null, fileInputStream(path), null)
+          case 'output => Lstream(null, null, null, fileOutputStream(path))
+          case 'io     => Lstream(null,null, fileInputStream(path), fileOutputStream(path))
+          case err => throw SyntaxError("The value " + err + " is not valid direction", env)
+        }
+      }
+
     }
   }
 
@@ -220,6 +266,37 @@ object Streams extends Helpers {
     }
     else
       io(env){ readObject(env.getStandartInput.reader) }
+  }
+
+  def func_read_byte(env: Env, args: List[Lcommon]): Lcommon = {
+    val in = if (args.length > 0) {
+      val s = args.head.castStream(env)
+      s.checkForRead(env)
+      s.in
+    } else
+      env.getStandartInput.in
+
+    if (in == null) throw SyntaxError("a binary stream required", env)
+    io(env){ readByte(in) }
+  }
+
+  def func_read_blob(env: Env, args: List[Lcommon]): Lcommon = {
+    val in = if (args.length > 0) {
+      val s = args.head.castStream(env)
+      s.checkForRead(env)
+      s.in
+    } else
+      env.getStandartInput.in
+
+    if (in == null) throw SyntaxError("a binary stream required", env)
+
+    if (args.length > 1) {
+      val numBytes = args(1).getInt(env)
+      io(env){ readBlob(in, numBytes) }
+    }
+    else
+      io(env){ readBlob(in) }
+
   }
 
   def func_read_char(env: Env, args: List[Lcommon]): Lcommon = {
@@ -280,6 +357,35 @@ object Streams extends Helpers {
     }
   }
 
+  def func_write_byte(env: Env, args: List[Lcommon]): Lcommon = {
+    notLess(env, args, 1)
+    val byte = Blob.toByte(env, args.head)
+    val out = if (args.length > 1) {
+      val s = args(1).castStream(env)
+      s.checkForWrite(env)
+      s.out
+    } else
+      env.getStandartInput.out
+
+    if (out == null) throw SyntaxError("a binary stream required", env)
+    io(env){ out.write(byte); Lbyte(byte) }
+  }
+
+  def func_write_blob(env: Env, args: List[Lcommon]): Lcommon = {
+    notLess(env, args, 1)
+    val blob = args.head.castBlob(env)
+    val out = if (args.length > 1) {
+      val s = args(1).castStream(env)
+      s.checkForWrite(env)
+      s.out
+    } else
+      env.getStandartInput.out
+
+    if (out == null) throw SyntaxError("a binary stream required", env)
+    io(env){ out.write(blob.bytes); blob }
+  }
+
+
   def func_write_char(env: Env, args: List[Lcommon]): Lcommon = {
     notLess(env, args, 1)
     val ch = args.head.castChar(env)
@@ -333,6 +439,16 @@ object Streams extends Helpers {
     Lstream(null, new PrintStream(out), null, out)
   }
 
+  def func_make_blob_input_stream(env: Env, args: List[Lcommon]): Lcommon = {
+    mustEqual(env, args, 1)
+    val blob = args.head.castBlob(env)
+    Lstream(null, null, new ByteArrayInputStream(blob.bytes), null)
+  }
+
+  def func_make_blob_output_stream(env: Env, args: List[Lcommon]): Lcommon = {
+    Lstream(null, null, null, new ByteArrayOutputStream)
+  }
+
   def func_get_output_stream_string(env: Env, args: List[Lcommon]): Lcommon = {
     mustEqual(env, args, 1)
     val s = args.head.castStream(env)
@@ -341,6 +457,16 @@ object Streams extends Helpers {
       case err => throw TypeError("The value " + err + " is not STRING-OUTPUT-STREAM", env)
     }
   }
+
+  def func_get_output_stream_blob(env: Env, args: List[Lcommon]): Lcommon = {
+    mustEqual(env, args, 1)
+    val s = args.head.castStream(env)
+    s.out match {
+      case b: ByteArrayOutputStream => Lblob(b.toByteArray)
+      case err => throw TypeError("The value " + err + " is not BLOB-OUTPUT-STREAM", env)
+    }
+  }
+
 
   def func_url_encode(env: Env, args: List[Lcommon]): Lcommon = {
     mustEqual(env, args, 1)
@@ -354,11 +480,15 @@ object Streams extends Helpers {
     Lfunction(func_open_url, Symbol("open-url")),
     Lfunction(func_close, 'close),
     Lfunction(func_read, 'read),
+    Lfunction(func_read_byte, Symbol("read-byte")),
+    Lfunction(func_read_blob, Symbol("read-blob")),
     Lfunction(func_read_char, Symbol("read-char")),
     Lfunction(func_read_text, Symbol("read-text")),
     Lfunction(func_read_line, Symbol("read-line")),
     Lfunction(func_print, 'print),
     Lfunction(func_write, 'write),
+    Lfunction(func_write_byte, Symbol("write-byte")),
+    Lfunction(func_write_blob, Symbol("write-blob")),
     Lfunction(func_write_char, Symbol("write-char")),
     Lfunction(func_write_string, Symbol("write-string")),
     Lfunction(func_write_line, Symbol("write-line")),
@@ -366,9 +496,11 @@ object Streams extends Helpers {
     Lfunction(func_terpri, 'newline),
     Lfunction(func_make_string_input_stream, Symbol("make-string-input-stream")),
     Lfunction(func_make_string_output_stream, Symbol("make-string-output-stream")),
+    Lfunction(func_make_blob_input_stream, Symbol("make-blob-input-stream")),
+    Lfunction(func_make_blob_output_stream, Symbol("make-blob-output-stream")),
     Lfunction(func_get_output_stream_string, Symbol("get-output-stream-string")),
+    Lfunction(func_get_output_stream_blob, Symbol("get-output-stream-blob")),
     Lfunction(func_url_encode, Symbol("url-encode"))
-
   )
 
 }

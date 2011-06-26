@@ -1,0 +1,57 @@
+":";exec ./listok -l $0 "$@"
+
+; calc a checksum (md5 or sha) for file using java.security.MessageDigst
+
+(interop "java.security.MessageDigest.getInstance" 'digest-algo :static)
+(interop "java.security.MessageDigest.update"  'digest-update)
+(interop "java.security.MessageDigest.digest"  'digest-result)
+
+(defun usage () (display "usage: digest filename [md5|sha]\n"))
+
+(unless *args* 
+  (usage) 
+  (exit))
+
+(def filename (first *args*))
+
+(defun any (x) x)
+;(defun all (x) t)
+
+(def algo 
+  (match (second *args*)
+    ("md5" (digest-algo "MD5"))
+    ("sha" (digest-algo "SHA"))
+    ((any x) (display "warning unknown algorithm: %s; use md5 as default\n" x) (digest-algo "MD5"))
+    (nil (digest-algo "MD5"))
+)) 
+
+
+(def f (open filename :input :binary))
+(unless f  
+  (display "unable to open file %s\n" filename)
+  (exit))
+
+(defun read-and-update ()
+  (declare :tco)
+  (let ((b (read-blob f 1024)))
+    (when b
+      (digest-update algo b) 
+      (read-and-update)      
+      )))
+
+(read-and-update)
+(close f)
+
+
+(display 
+  (fold 
+    (lambda (s b) (string s (format "%02x" b))) 
+    "" 
+    (to-list (digest-result algo))))
+
+(display "\n")
+
+
+
+
+
