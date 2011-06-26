@@ -65,10 +65,12 @@ object Listok {
 
   def parse(text: String): List[Lcommon] = {
     Parser.read(dropComments(text)) match {
+  //  Parser.read(text) match {
       case Right(l) => l
       case Left(msg) => throw ParserError(msg)
     }
   }
+
 
   private def dropComments(text: String) = text.split('\n') map { s =>
       s.lastIndexOf(';') match {
@@ -81,6 +83,7 @@ object Listok {
             s // in case of ";"
       }
     } mkString("\n")
+
 
   // listok01
   // val bytecodesign = Array(108.toByte, 105.toByte, 115.toByte, 116.toByte, 111.toByte, 107.toByte, 48.toByte, 49.toByte)

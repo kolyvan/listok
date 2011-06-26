@@ -4,17 +4,15 @@ import _root_.ru.listok._
 import org.scalatest.FunSuite
 
 
-class DoTest extends FunSuite {
+class DoTest extends FunSuite with Helper {
 
-  def listok = new Listok
-
+//  def listok = new Listok
 
   test("do") {
 
     expect(Lnil){listok.eval("(do () (t))")}
     expect(Lnil){listok.eval("(do () (t) t)")}
     expect(Lkeyword('ok)){listok.eval("(do () (t :ok) t)")}
-
 
     expect(Lint(9)){listok.eval(
      """
@@ -54,8 +52,6 @@ class DoTest extends FunSuite {
        )
      """)}
      //expect(Lnil){listok.eval("(do ((n 0 (+ 1 n))) ((eq n 3)) (print n)  )")}
-
-
   }
 
   test("while") {
@@ -104,5 +100,4 @@ class DoTest extends FunSuite {
        """
      )}
    }
-
 }

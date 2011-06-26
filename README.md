@@ -17,7 +17,7 @@ It's a Scala-based and need in scala-library.jar to run.
 
 - nil, t
 - int, float, bignum, ratio
-- char, symbol, keyword, pair
+- char, symbol, keyword, pair, byte, blob
 - string, list, vector, hashmap, lazyseq	
 - hashtable
 - stream 
@@ -57,8 +57,8 @@ It's a Scala-based and need in scala-library.jar to run.
 
 - to-str, to-char, to-int, to-float, to-number, to-list, to-vector
 
-- atom, listp, null, sequencep, keywordp, numberp, symbolp, functionp,
-- stringp, vectorp, charp, streamp, regexp, 
+- atom, listp, null, sequencep, keywordp, numberp, symbolp, functionp
+- stringp, vectorp, charp, streamp, regexp, bytep, blobp
 - hashtablep, hashmapp threadp, mailslotp, structp, lazyseqp, pairp
  
 ### number
@@ -84,11 +84,12 @@ It's a Scala-based and need in scala-library.jar to run.
 ### streams
 
 - open, open-socket, open-url, close,
-- read, read-char, read-text, read-line,
-- print, write, write-char, write-string, write-line,
+- read, read-byte, read-blob, read-char, read-text, read-line,
+- print, write, write-byte, write-blob, write-char, write-string, write-line,
 - terpri, newline,
 - make-string-input-stream, make-string-output-stream,
-- get-output-stream-string, 
+- make-blob-input-stream, make-blob-output-stream,
+- get-output-stream-string, get-output-stream-blob
 - url-encode
    
 ### regex

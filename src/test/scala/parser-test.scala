@@ -11,9 +11,13 @@ class ParserTest extends FunSuite {
   def parse1(text: String) = {
     Parser.read(text) match {
         case Right(s) =>
-          if (s.length != 1)
-            fail("a list with more than one elements: " + s)
-          s.head
+          if (s.isEmpty)
+            Lnil
+          else {
+            if (s.length != 1)
+              fail("a list with more than one elements: " + s)
+            s.head
+          }
         case Left(m) => fail(m)
       }
   }
@@ -246,7 +250,7 @@ class ParserTest extends FunSuite {
     expect(Lstring("\033"))  {parse1(""""\e"""")}
   }
 
-  test("more symbols") {
+  test("symbols and sforms") {
     expect(Lsymbol(Symbol("match-all")))  {parse1("match-all")}
     expect(Lsymbol(Symbol("match/all")))  {parse1("match/all")}
     expect(Lsymbol(Symbol("matchall")))  {parse1("matchall")}
@@ -255,7 +259,6 @@ class ParserTest extends FunSuite {
     expect(Lsymbol(Symbol("do/1")))  {parse1("do/1")}
     expect(Lsymbol(Symbol("do1")))  {parse1("do1")}
 
-
     expect(LL(Lsymbol(Symbol("match-all")))) {(parse1("(match-all)"))}
     expect(LL(Lsymbol(Symbol("match/all")))) {parse1("(match/all)")}
     expect(LL(Lsymbol(Symbol("matchall"))))  {parse1("(matchall)")}
@@ -263,11 +266,12 @@ class ParserTest extends FunSuite {
     expect(LL(Lsymbol(Symbol("do-1"))))  {parse1("(do-1)")}
     expect(LL(Lsymbol(Symbol("do/1"))))  {parse1("(do/1)")}
     expect(LL(Lsymbol(Symbol("do1"))))  {parse1("(do1)")}
+    expect(LL(Lsymbol(Symbol("all-do"))))  {parse1("(all-do)")}
+    expect(LL(Lsymbol(Symbol("dodo"))))  {parse1("(dodo)")}
 
     expect(LL(Lsymbol(Symbol("defmarco-all")))) {parse1("(defmarco-all)")}
     expect(LL(Lsymbol(Symbol("lambda-all"))))   {parse1("(lambda-all)")}
     expect(LL(Lsymbol(Symbol("quote-all"))))    {parse1("(quote-all)")}
-
   }
 
 }
