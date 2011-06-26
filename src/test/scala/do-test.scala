@@ -15,6 +15,7 @@ class DoTest extends FunSuite {
     expect(Lnil){listok.eval("(do () (t) t)")}
     expect(Lkeyword('ok)){listok.eval("(do () (t :ok) t)")}
 
+
     expect(Lint(9)){listok.eval(
      """
      (def r 0)
@@ -53,6 +54,7 @@ class DoTest extends FunSuite {
        )
      """)}
      //expect(Lnil){listok.eval("(do ((n 0 (+ 1 n))) ((eq n 3)) (print n)  )")}
+
 
   }
 
@@ -102,4 +104,5 @@ class DoTest extends FunSuite {
        """
      )}
    }
+
 }

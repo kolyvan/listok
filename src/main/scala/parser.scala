@@ -30,21 +30,24 @@ object Parser extends JavaTokenParsers {
     ("\""+"""([^"\p{Cntrl}\\]|\\[\\/bfnrte]|\\u[a-fA-F0-9]{4})*"""+"\"").r  // added \e
 
   // todo: list_ident is obsolete - remove it
-  lazy val list_ident = """[a-zA-Z_~%!=<>\-\+\*\?\^\&\/]([a-zA-Z_@~%!:=#<>\-\+\*\?\^\&\d])*""".r
+  // lazy val list_ident = """[a-zA-Z_~%!=<>\-\+\*\?\^\&\/]([a-zA-Z_@~%!:=#<>\-\+\*\?\^\&\d])*""".r
 
-  lazy val list_keyword = """:([a-zA-Z_~%!=#<>\-\+\*\?\^\&\d])*""".r
-  lazy val list_symbol = """[a-zA-Z_~%!=<>\-\+\*\?\^\&\/\d\.]([a-zA-Z_~%!=<>:@#\-\+\*\?\^\&\/\d\.])*""".r
+  lazy val regex_keyword = """:([a-zA-Z_~%!=#<>\-\+\*\?\^\&\d])*""".r
+  lazy val regex_symbol = """[a-zA-Z_~%!=<>\-\+\*\?\^\&\/\d\.]([a-zA-Z_~%!=<>:@#\-\+\*\?\^\&\/\d\.])*""".r
 
   lazy val lparen: Parser[String] = "("
   lazy val rparen: Parser[String] = ")"
-  lazy val str_quote: Parser[String] = "quote"
+ // lazy val str_quote: Parser[String] = "quote"
+  lazy val str_quote: Parser[String] = """quote\s+""".r
   lazy val char_quote: Parser[String] = "'"
   lazy val str_lambda: Parser[String] = "lambda" | "\u03BB" //"λ" greek small letter lamda
   lazy val str_defmacro: Parser[String] = "defmacro"
-  lazy val sform_name = """(def|defun|defconstant|setf|if|cond|do|and|or|spawn|match|defstruct|assert|collect)\b""".r
+
+ //lazy val sform_name = """(def|defun|defconstant|setf|if|cond|do|and|or|spawn|match|defstruct|assert|collect)\b""".r
+  lazy val sform_name = """(def|defun|defconstant|setf|if|cond|do|and|or|spawn|match|defstruct|assert|collect)\s+""".r
 
   //symbol or number
-  lazy val symbol: Parser[Lcommon] = list_symbol ^^ {
+  lazy val symbol: Parser[Lcommon] = regex_symbol ^^ {
     case "t" => Ltrue
     case "nil" => Lnil
     case s => isNumber(s) match {
@@ -53,11 +56,11 @@ object Parser extends JavaTokenParsers {
     }
   }
 
-  lazy val keyword: Parser[Lkeyword] = list_keyword ^^ { s =>
+  lazy val keyword: Parser[Lkeyword] = regex_keyword ^^ { s =>
     Lkeyword(Symbol(s.substring(1))) }
 
   lazy val sform: Parser[Llist] = lparen ~> sform_name ~ (form+)  <~ rparen ^^ {
-    case name  ~ forms => Llist(SpecialForms.make(Symbol(name)) :: forms)
+    case name  ~ forms => Llist(SpecialForms.make(Symbol(name.trim)) :: forms)
   }
 
   lazy val char = new ParserChar
@@ -101,7 +104,7 @@ object Parser extends JavaTokenParsers {
   lazy val macro_list: Parser[Llist] = lparen ~> (macro_form*) <~ rparen ^^ { Llist(_) }
 
   lazy val macro_sform: Parser[Llist] = lparen ~> sform_name ~ (macro_form+)  <~ rparen ^^ {
-    case name  ~ forms => Llist(SpecialForms.make(Symbol(name)) :: forms)
+    case name  ~ forms => Llist(SpecialForms.make(Symbol(name.trim)) :: forms)
   }
 
   lazy val macro_form: Parser[Lcommon] = // invalid_symbol |
@@ -109,7 +112,11 @@ object Parser extends JavaTokenParsers {
       string | quote |  macro_sform |
       macro_list | macro_comma | macro_commasplice | macro_backquote
 
-  lazy val defmacro: Parser[Ldefmacro] = lparen ~> str_defmacro ~> list_ident ~ lambda_list ~ (macro_form*) <~ rparen ^^ {
+  //lazy val defmacro: Parser[Ldefmacro] = lparen ~> str_defmacro ~> list_ident ~ lambda_list ~ (macro_form*) <~ rparen ^^ {
+  //    case ident ~ ll ~ body => Ldefmacro(Symbol(ident), ll, body)
+  // }
+
+  lazy val defmacro: Parser[Ldefmacro] = lparen ~> str_defmacro ~> regex_symbol ~ lambda_list ~ (macro_form*) <~ rparen ^^ {
       case ident ~ ll ~ body => Ldefmacro(Symbol(ident), ll, body)
    }
 

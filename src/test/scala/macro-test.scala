@@ -4,9 +4,9 @@ import _root_.ru.listok._
 import org.scalatest.FunSuite
 
 
-class MacroTest extends FunSuite {
+class MacroTest extends FunSuite with Helper {
 
-  def listok = new Listok
+  // def listok = new Listok
 
   test("defmacro") {
 
@@ -24,7 +24,6 @@ class MacroTest extends FunSuite {
     (test x 11)
     """)}
 
-
     expect(LL(Lint(2), Lint(1))){listok.eval(
     //expect(Lint(2)){listok.eval(
     """
@@ -37,9 +36,7 @@ class MacroTest extends FunSuite {
     (swap x y)
     (list x y)
     """)}
-
   }
-
 
   test("macro") {
      expect(Lint(100)){listok.eval("""
@@ -118,5 +115,4 @@ class MacroTest extends FunSuite {
     //expect(Lkeyword('ok)){listok.eval("(eval '(if t :ok) )")}
     expect(Lkeyword('ok)){listok.eval("(eval (macroexpand '(when t :ok)))")}
   }
-
 }

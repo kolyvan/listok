@@ -245,5 +245,30 @@ class ParserTest extends FunSuite {
     expect(Lstring("\n\b\f\r\t"))  {parse1(""""\n\b\f\r\t"""")}
     expect(Lstring("\033"))  {parse1(""""\e"""")}
   }
+
+  test("more symbols") {
+    expect(Lsymbol(Symbol("match-all")))  {parse1("match-all")}
+    expect(Lsymbol(Symbol("match/all")))  {parse1("match/all")}
+    expect(Lsymbol(Symbol("matchall")))  {parse1("matchall")}
+
+    expect(Lsymbol(Symbol("do-1")))  {parse1("do-1")}
+    expect(Lsymbol(Symbol("do/1")))  {parse1("do/1")}
+    expect(Lsymbol(Symbol("do1")))  {parse1("do1")}
+
+
+    expect(LL(Lsymbol(Symbol("match-all")))) {(parse1("(match-all)"))}
+    expect(LL(Lsymbol(Symbol("match/all")))) {parse1("(match/all)")}
+    expect(LL(Lsymbol(Symbol("matchall"))))  {parse1("(matchall)")}
+
+    expect(LL(Lsymbol(Symbol("do-1"))))  {parse1("(do-1)")}
+    expect(LL(Lsymbol(Symbol("do/1"))))  {parse1("(do/1)")}
+    expect(LL(Lsymbol(Symbol("do1"))))  {parse1("(do1)")}
+
+    expect(LL(Lsymbol(Symbol("defmarco-all")))) {parse1("(defmarco-all)")}
+    expect(LL(Lsymbol(Symbol("lambda-all"))))   {parse1("(lambda-all)")}
+    expect(LL(Lsymbol(Symbol("quote-all"))))    {parse1("(quote-all)")}
+
+  }
+
 }
 
