@@ -23,7 +23,6 @@ package ru.listok
 
 import scala.collection.mutable.{Map => MMap}
 import scala.collection.mutable.ArraySeq
-import java.io.{OutputStream, InputStream, PrintStream, BufferedReader}
 import java.util.regex.{ Pattern }
 import net.fyrie.ratio.Ratio
 
@@ -263,47 +262,8 @@ case class Lmailslot(val m: Mailslot) extends  Lruntime {
   def pp = "#<mailstot " + Util.pp(m.name) + " count: " +m.size+" >"
 }
 
-case class Lstream ( val reader: BufferedReader, val writer: PrintStream,
-                     val in: InputStream=null, val out: OutputStream =null) extends Lruntime {
-
-  private var closed = false
-  //val reader = if (in != null) new BufferedReader(new InputStreamReader(in)) else null
-  //val writer =  if (out != null) new PrintStream(out) else null
-
-  def pp = "#<stream " + direction + ">"
-
-  def direction = (reader, writer) match {
-    case (null, null) => 'failed
-    case (_, null) => 'input
-    case (null, _) => 'output
-    case _ => 'io
-  }
-
-  def canRead = reader != null || in != null
-  def canWrite = writer != null || out != null
-  def isClosed = closed
-
-  def close {
-    closed = true
-    if (in != null) in.close
-    if (out != null) out.close
-    if (reader != null) reader.close
-    if (writer != null) writer.close
-  }
-
-  def checkForWrite(env: Env) {
-    if (!canWrite)
-      throw SyntaxError("Unable write to " + direction + " stream", env)
-    if (isClosed)
-      throw SyntaxError("The stream is closed", env)
-  }
-
-  def checkForRead(env: Env) {
-    if (!canRead)
-      throw SyntaxError("Unable read from " + direction + " stream", env)
-    if (isClosed)
-      throw SyntaxError("The stream is closed", env)
-  }
+case class Lstream (stm: StreamBase) extends Lruntime {
+  def pp = "#<stream " + stm.status + ">"
 }
 
 case class Lpair (val a: Lcommon, val b: Lcommon) extends Latom {
@@ -432,4 +392,14 @@ case class Lblob(bytes: Array[Byte]) extends Latom {
     case _ => false
   }
 
+}
+
+case class Lconnection(url: String, in: StreamBase, out: StreamBase) extends  Lruntime {
+  def pp = "#<connection " + url  + " " +
+    (if (in != null) Util.pp(in.status) else "-") +
+    "/" +
+    (if (out != null) Util.pp(out.status) else "-") +
+    ">"
+
+  def close() { if (null != in) in.close; if (out != null) out.close }
 }

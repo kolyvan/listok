@@ -60,8 +60,6 @@ object Streams extends Helpers {
     bos.toString
   }
 
-
-
   def readFile(path: String): Array[Byte] = {
     val fs = new FileInputStream(new File(path))
     try { readBytes(fs) }
@@ -83,70 +81,6 @@ object Streams extends Helpers {
     finally { fs.close }
   }
 
-  def readByte(in: InputStream) = in.read match {
-    case -1 => Lnil
-    case x => Lbyte(x.toByte)
-  }
-
-  def readBlob(in: InputStream) = {
-    val b = readBytes(in)
-    if (b.isEmpty) Lnil
-    else Lblob(b)
-  }
-
-  def readBlob(in: InputStream, numBytes: Int) = {
-    val bytes = new Array[Byte](numBytes)
-    in.read(bytes) match {
-      case -1 => Lnil
-      case `numBytes` => Lblob(bytes)
-      case x =>
-        val t = new Array[Byte](x)
-        bytes.copyToArray(t, 0, x)
-        Lblob(t)
-    }
-  }
-
-
-  def readObject(reader: BufferedReader): Lcommon = reader.readLine match {
-    case null => Lnil
-    case s => Listok.parse(s) match {
-      case Nil => Lnil
-      case x::Nil => x
-      case xs => Llist(xs)
-    }
-  }
-
-  def readChar(reader: BufferedReader) = reader.read match {
-    case -1 => Lnil
-    case x => Lchar(x.toChar)
-  }
-
-  def readString(reader: BufferedReader) = {
-    val sb = new StringBuilder
-    val buf = new Array[Char](4096)
-    var n = reader.read(buf)
-    while (n >= 0) {
-      sb.appendAll(buf, 0, n)
-      n = reader.read(buf)
-    }
-    Lstring(sb.toString)
-  }
-
-  def readLine(reader: java.io.BufferedReader) = reader.readLine match {
-    case null => Lnil
-    case x => Lstring(x)
-  }
-
-  // def writeByte(out: OutputStream, b: Int) = out.write(b)
-  // def writeBytes
-
-
-  def writeObject(writer: PrintStream, x:Lcommon) = {writer.print(x.pp);x }
-  def writeChar(writer: PrintStream, x: Lchar) = {writer.print(x.char);x}
-  def writeString(writer: PrintStream, x: Lstring) = {writer.print(x.str);x}
-  def writeLine(writer: java.io.PrintStream, x: Lstring) = {writer.println(x.str);x}
-  def newline(writer: java.io.PrintStream) = {writer.println();Lnil}
-
   def fileInputStream(path: String) = new FileInputStream(new File(path))
   def fileOutputStream(path:String) = new FileOutputStream(new File(path))
   def fileBufferedReader(path: String) = new BufferedReader(new FileReader(new File(path)))
@@ -155,31 +89,37 @@ object Streams extends Helpers {
   def byteArrayPrintStream = new PrintStream(new ByteArrayOutputStream)
   def bufferedReader(in: InputStream) = new BufferedReader(new InputStreamReader(in))
 
-  def makeSocketStream(s: java.net.Socket) = {
+
+  def makeConnection(host: String, port: Int, textMode: Boolean) = {
+    val s = new Socket(host, port)
     val in = s.getInputStream
     val out = s.getOutputStream
-    Lstream(
-      bufferedReader(in),
-      new PrintStream(out),
-      in,
-      out)
+    val url = host + ":" + port
+    if (textMode)
+      Lconnection(url, new StreamReadText(bufferedReader(in)), new StreamWriteText(new PrintStream(out)))
+    else
+      Lconnection(url, new StreamReadBin(in), new StreamWriteBin(out))
   }
 
-  def makeConnection(env: Env, url: String, direction: Symbol) = {
+  def makeConnection(url: String, direction: Symbol) = {
     val conn = (new URL(url)).openConnection.asInstanceOf[HttpURLConnection]
     val rcode = conn.getResponseCode
     if (rcode == 200) {
-      direction match {
+      (direction: @unchecked) match {
         case 'input =>
-          Lstream(bufferedReader(conn.getInputStream), null)
+          Lconnection(url,
+            new StreamReadText(bufferedReader(conn.getInputStream)),
+            null)
         case 'output =>
           conn.setDoOutput(true)
-          Lstream(null, new PrintStream(conn.getOutputStream))
+          Lconnection(url,
+            null,
+            new StreamWriteText(new PrintStream(conn.getOutputStream)))
         case 'io =>
           conn.setDoOutput(true)
-          Lstream(bufferedReader(conn.getInputStream), new PrintStream(conn.getOutputStream))
-        case err =>
-          throw SyntaxError("The value " + err + " is not valid direction", env)
+          Lconnection(url,
+            new StreamReadText(bufferedReader(conn.getInputStream)),
+            new StreamWriteText(new PrintStream(conn.getOutputStream)))
       }
     }
     else {
@@ -188,12 +128,32 @@ object Streams extends Helpers {
     }
   }
 
+
   def io(env: Env)(f: => Lcommon): Lcommon = {
     try { f } catch {
       case ex: java.io.IOException =>
         env.host.onwarning(env, ex.toString)
         Lnil
     }
+  }
+
+  def read(env: Env, args: List[Lcommon])(f: (StreamBase)=> Lcommon): Lcommon = {
+    val s = if (args.length > 0)
+      args.head.castStream(env).stm
+    else
+      env.getStandartInput.stm
+    s.checkForRead(env)
+    io(env){ f(s) }
+  }
+
+  def write (env: Env, args: List[Lcommon])(f: (StreamBase, Lcommon)=> Lcommon): Lcommon = {
+    notLess(env, args, 1)
+    val s = if (args.length > 1)
+      args(1).castStream(env).stm
+    else
+      env.getStandartOutput.stm
+    s.checkForWrite(env)
+    io(env){ f(s, args.head) }
   }
 
   /// streams
@@ -214,9 +174,8 @@ object Streams extends Helpers {
     if (mode == 'text) {
       io(env){
         direction match {
-          case 'input  => Lstream(fileBufferedReader(path), null)
-          case 'output => Lstream(null, filePrintStream(path))
-          case 'io     => Lstream(fileBufferedReader(path), filePrintStream(path))
+          case 'input  => Lstream(new StreamReadText(fileBufferedReader(path)))
+          case 'output => Lstream(new StreamWriteText(filePrintStream(path)))
           case err => throw SyntaxError("The value " + err + " is not valid direction", env)
         }
       }
@@ -224,9 +183,8 @@ object Streams extends Helpers {
 
       io(env){
         direction match {
-          case 'input  => Lstream(null, null, fileInputStream(path), null)
-          case 'output => Lstream(null, null, null, fileOutputStream(path))
-          case 'io     => Lstream(null,null, fileInputStream(path), fileOutputStream(path))
+          case 'input  => Lstream(new StreamReadBin(fileInputStream(path)))
+          case 'output => Lstream(new StreamWriteBin(fileOutputStream(path)))
           case err => throw SyntaxError("The value " + err + " is not valid direction", env)
         }
       }
@@ -234,239 +192,139 @@ object Streams extends Helpers {
     }
   }
 
-  def func_open_socket(env: Env, args: List[Lcommon]): Lcommon = {
-    mustEqual(env, args, 2) // open-socket host port
+  def func_open_tcp_conn(env: Env, args: List[Lcommon]): Lcommon = {
+    notLess(env, args, 2) // open-socket host port [:text|:binary]
+    val mode = if (args.length > 2)
+      args(2).castKeyword(env).sym
+      else 'text
     val host = args.head.getString(env)
     val port = args(1).getInt(env)
-    io(env){ makeSocketStream(new Socket(host, port)) }
+    io(env){ makeConnection(host, port, mode == 'text) }
   }
 
-  def func_open_url(env: Env, args: List[Lcommon]): Lcommon = {
+  def func_open_http_conn(env: Env, args: List[Lcommon]): Lcommon = {
     notLess(env, args, 1)
     val url = args.head.getString(env)
-    val direction = if (args.length == 2) args(1).getSymbol(env) else 'input
-    io(env){ makeConnection(env, url, direction) }
+
+    val direction = if (args.length > 1)
+      args(1).getSymbol(env)
+      else 'input
+
+    if (direction != 'input && direction != 'output && direction != 'io)
+      throw SyntaxError("The value " + direction + " is not valid direction", env)
+
+    io(env){ makeConnection(url, direction) }
   }
 
   def func_close(env: Env, args: List[Lcommon]): Lcommon = {
     mustEqual(env, args, 1)
     args.head match {
       case Lnil => // it's ok to close nil
-      case s: Lstream => s.close
+      case c: Lconnection => c.close
+      case s: Lstream => s.stm.close
       case err => throw TypeError("The value " + err + " is not STREAM", env)
     }
     Ltrue
   }
 
-  def func_read(env: Env, args: List[Lcommon]): Lcommon = {
-    if (args.length > 0) {
-      val s = args.head.castStream(env)
-      s.checkForRead(env)
-      io(env){ readObject(s.reader) }
-    }
-    else
-      io(env){ readObject(env.getStandartInput.reader) }
+  def func_flush(env: Env, args: List[Lcommon]): Lcommon = {
+    mustEqual(env, args, 1)
+    val s = args.head.castStream(env)
+    s.stm.flush
+    s
   }
 
-  def func_read_byte(env: Env, args: List[Lcommon]): Lcommon = {
-    val in = if (args.length > 0) {
-      val s = args.head.castStream(env)
-      s.checkForRead(env)
-      s.in
-    } else
-      env.getStandartInput.in
-
-    if (in == null) throw SyntaxError("a binary stream required", env)
-    io(env){ readByte(in) }
-  }
-
-  def func_read_blob(env: Env, args: List[Lcommon]): Lcommon = {
-    val in = if (args.length > 0) {
-      val s = args.head.castStream(env)
-      s.checkForRead(env)
-      s.in
-    } else
-      env.getStandartInput.in
-
-    if (in == null) throw SyntaxError("a binary stream required", env)
-
-    if (args.length > 1) {
-      val numBytes = args(1).getInt(env)
-      io(env){ readBlob(in, numBytes) }
-    }
-    else
-      io(env){ readBlob(in) }
-
-  }
-
-  def func_read_char(env: Env, args: List[Lcommon]): Lcommon = {
-    if (args.length > 0) {
-      val s = args.head.castStream(env)
-      s.checkForRead(env);
-      io(env){ readChar(s.reader) }
-    } else
-      io(env){ readChar(env.getStandartInput.reader) }
-  }
-
-  def func_read_text(env: Env, args: List[Lcommon]): Lcommon = {
-    val reader = if (args.length > 0) {
-      val s = args.head.castStream(env)
-      s.checkForRead(env);
-      s.reader
-    } else
-      env.getStandartInput.reader
-    io(env){ readString(reader) }
-  }
-
-  def func_read_line(env: Env, args: List[Lcommon]): Lcommon = {
-    if (args.length > 0) {
-      val s = args.head.castStream(env)
-      s.checkForRead(env);
-      io(env){ readLine(s.reader) }
-    } else
-      io(env){ readLine(env.getStandartInput.reader) }
-  }
-
-  def func_print(env: Env, args: List[Lcommon]): Lcommon = {
-    notLess(env, args, 1)
-    if (args.length > 1) {
-      val s = args(1).castStream(env)
-      s.checkForWrite(env);
-      io(env){
-        newline(s.writer)
-        writeObject(s.writer, args.head)
+  def func_read(env: Env, args: List[Lcommon]): Lcommon = read(env, args) {
+    _.readLine match {
+        case Lstring(s) => Listok.parse(s) match {
+          case Nil => Lnil
+          case x::Nil => x
+          case xs => Llist(xs)
+        }
+        case _ => Lnil
       }
-    } else {
-      val writer = env.getStandartOutput.writer
-      io(env){
-        newline(writer)
-        writeObject(writer, args.head)
-      }
-    }
   }
 
-  def func_write(env: Env, args: List[Lcommon]): Lcommon = {
-    notLess(env, args, 1)
-    if (args.length > 1) {
-      val s = args(1).castStream(env)
-      s.checkForWrite(env);
-      io(env){ writeObject(s.writer, args.head) }
-    } else {
-      val writer = env.getStandartOutput.writer
-      io(env){ writeObject(writer, args.head) }
-    }
-  }
+  def func_read_byte(env: Env, args: List[Lcommon]): Lcommon = read(env, args) { _.readByte }
 
-  def func_write_byte(env: Env, args: List[Lcommon]): Lcommon = {
-    notLess(env, args, 1)
-    val byte = Blob.toByte(env, args.head)
-    val out = if (args.length > 1) {
-      val s = args(1).castStream(env)
-      s.checkForWrite(env)
-      s.out
-    } else
-      env.getStandartInput.out
+  def func_read_blob(env: Env, args: List[Lcommon]): Lcommon = read(env, args) { _.readBlob }
 
-    if (out == null) throw SyntaxError("a binary stream required", env)
-    io(env){ out.write(byte); Lbyte(byte) }
-  }
+  def func_read_char(env: Env, args: List[Lcommon]): Lcommon = read(env, args) { _.readChar }
 
-  def func_write_blob(env: Env, args: List[Lcommon]): Lcommon = {
-    notLess(env, args, 1)
-    val blob = args.head.castBlob(env)
-    val out = if (args.length > 1) {
-      val s = args(1).castStream(env)
-      s.checkForWrite(env)
-      s.out
-    } else
-      env.getStandartInput.out
+  def func_read_text(env: Env, args: List[Lcommon]): Lcommon = read(env, args) { _.readString }
 
-    if (out == null) throw SyntaxError("a binary stream required", env)
-    io(env){ out.write(blob.bytes); blob }
-  }
+  def func_read_line(env: Env, args: List[Lcommon]): Lcommon = read(env, args) { _.readLine }
 
 
-  def func_write_char(env: Env, args: List[Lcommon]): Lcommon = {
-    notLess(env, args, 1)
-    val ch = args.head.castChar(env)
-    if (args.length > 1) {
-      val s = args(1).castStream(env)
-      s.checkForWrite(env);
-      io(env){ writeChar(s.writer, ch) }
-    } else
-      io(env){ writeChar(env.getStandartOutput.writer, ch) }
-  }
+  def func_print(env: Env, args: List[Lcommon]): Lcommon =
+    write(env, args) {(s,x) => s.write(Lstring(x.pp)); s.newline(); x}
 
-  def func_write_string(env: Env, args: List[Lcommon]): Lcommon = {
-    notLess(env, args, 1)
-    val str = args.head.castString(env)
-    if (args.length > 1) {
-      val s = args(1).castStream(env)
-      s.checkForWrite(env);
-      io(env){ writeString(s.writer, str) }
-    } else
-      io(env){ writeString(env.getStandartOutput.writer, str) }
-  }
+  def func_write(env: Env, args: List[Lcommon]): Lcommon =
+    write(env, args) {(s,x) => s.write(Lstring(x.pp)); x}
 
-  def func_write_line(env: Env, args: List[Lcommon]): Lcommon = {
-    notLess(env, args, 1)
-    val str = args.head.castString(env)
-    if (args.length > 1) {
-      val s = args(1).castStream(env)
-      s.checkForWrite(env);
-      io(env){ writeLine(s.writer, str) }
-    } else
-      io(env){ writeLine(env.getStandartOutput.writer, str) }
-  }
+  def func_write_byte(env: Env, args: List[Lcommon]): Lcommon =
+    write(env, args) {(s,x) => val b = Lbyte(Blob.toByte(env, x)); s.write(b); b}
+
+  def func_write_blob(env: Env, args: List[Lcommon]): Lcommon =
+    write(env, args) {(s,x) => s.write(x.castBlob(env)); x}
+
+  def func_write_char(env: Env, args: List[Lcommon]): Lcommon =
+    write(env, args) {(s,x) => s.write(x.castChar(env)); x }
+
+  def func_write_string(env: Env, args: List[Lcommon]): Lcommon =
+    write(env, args) {(s,x) => s.write(x.castString(env)); x}
+
+  def func_write_line(env: Env, args: List[Lcommon]): Lcommon =
+    write(env, args) {(s,x) => s.write(x.castString(env)); s.newline(); x }
 
   def func_terpri (env: Env, args: List[Lcommon]): Lcommon = {
-    if (args.length > 0) {
-      val s = args.head.castStream(env)
-      s.checkForWrite(env);
-      io(env){ newline(s.writer) }
-    } else
-      io(env){ newline(env.getStandartOutput.writer) }
+    val s = if (args.length > 0)
+      args(0).castStream(env).stm
+    else
+      env.getStandartOutput.stm
+    s.checkForWrite(env)
+    io(env){ s.newline(); Lnil }
   }
+
 
   def func_make_string_input_stream(env: Env, args: List[Lcommon]): Lcommon = {
     mustEqual(env, args, 1)
     val str = args.head.getString(env)
-    Lstream(byteArrayBufferedReader(str.getBytes), null)
+    Lstream(new StreamReadText(byteArrayBufferedReader(str.getBytes)))
   }
 
   def func_make_string_output_stream(env: Env, args: List[Lcommon]): Lcommon = {
     val out = new ByteArrayOutputStream
-    Lstream(null, new PrintStream(out), null, out)
+    Lstream(new StreamWriteTextToBytes(new PrintStream(out), out))
   }
 
   def func_make_blob_input_stream(env: Env, args: List[Lcommon]): Lcommon = {
     mustEqual(env, args, 1)
     val blob = args.head.castBlob(env)
-    Lstream(null, null, new ByteArrayInputStream(blob.bytes), null)
+    Lstream(new StreamReadBin(new ByteArrayInputStream(blob.bytes)))
   }
 
   def func_make_blob_output_stream(env: Env, args: List[Lcommon]): Lcommon = {
-    Lstream(null, null, null, new ByteArrayOutputStream)
+    Lstream(new StreamWriteBin(new ByteArrayOutputStream))
   }
 
   def func_get_output_stream_string(env: Env, args: List[Lcommon]): Lcommon = {
     mustEqual(env, args, 1)
     val s = args.head.castStream(env)
-    s.out match {
-      case b: ByteArrayOutputStream => Lstring(b.toString)
-      case err => throw TypeError("The value " + err + " is not STRING-OUTPUT-STREAM", env)
-    }
+   s.stm match {
+    case x: StreamWriteTextToBytes => Lstring(x.out.toString)
+    case err => throw TypeError("The value " + err + " is not STRING-OUTPUT-STREAM", env)
+   }
   }
 
   def func_get_output_stream_blob(env: Env, args: List[Lcommon]): Lcommon = {
     mustEqual(env, args, 1)
     val s = args.head.castStream(env)
-    s.out match {
+    s.stm.obj match {
       case b: ByteArrayOutputStream => Lblob(b.toByteArray)
       case err => throw TypeError("The value " + err + " is not BLOB-OUTPUT-STREAM", env)
     }
   }
-
 
   def func_url_encode(env: Env, args: List[Lcommon]): Lcommon = {
     mustEqual(env, args, 1)
@@ -474,11 +332,44 @@ object Streams extends Helpers {
     Lstring(URLEncoder.encode(s, "UTF-8"))
   }
 
+  def func_get_output_stream(env: Env, args: List[Lcommon]): Lcommon = {
+    mustEqual(env, args, 1)
+    args.head match {
+      case Lprocess(_, p) => Lstream(new StreamWriteText(new PrintStream(p.getOutputStream)))
+      case Lconnection(_, _, out) => Lstream(out)
+      case err => throw TypeError("The value " + err + " is not PROCESS or CONNECTION", env)
+    }
+  }
+
+  def func_get_input_stream(env: Env, args: List[Lcommon]): Lcommon = {
+    mustEqual(env, args, 1)
+    args.head match {
+      case Lprocess(_, p) => Lstream(new StreamReadText(bufferedReader(p.getInputStream)))
+      case Lconnection(_, in, _) => Lstream(in)
+      case err => throw TypeError("The value " + err + " is not PROCESS or CONNECTION", env)
+    }
+  }
+
+  def func_open_streamp(env: Env, l: List[Lcommon]): Lcommon = {
+    mustEqual(env, l, 1)
+    Util.toLbool(!l.head.castStream(env).stm.isClosed)
+  }
+
+  def func_input_streamp(env: Env, l: List[Lcommon]): Lcommon = {
+    mustEqual(env, l, 1)
+    Util.toLbool(l.head.castStream(env).stm.canRead)
+  }
+
+  def func_output_streamp(env: Env, l: List[Lcommon]): Lcommon = {
+    mustEqual(env, l, 1)
+    Util.toLbool(l.head.castStream(env).stm.canWrite)
+  }
+
+
   val all = List (
     Lfunction(func_open, 'open),
-    Lfunction(func_open_socket, Symbol("open-socket")),
-    Lfunction(func_open_url, Symbol("open-url")),
     Lfunction(func_close, 'close),
+    Lfunction(func_flush, 'flush), // rename to force_output ?
     Lfunction(func_read, 'read),
     Lfunction(func_read_byte, Symbol("read-byte")),
     Lfunction(func_read_blob, Symbol("read-blob")),
@@ -500,56 +391,16 @@ object Streams extends Helpers {
     Lfunction(func_make_blob_output_stream, Symbol("make-blob-output-stream")),
     Lfunction(func_get_output_stream_string, Symbol("get-output-stream-string")),
     Lfunction(func_get_output_stream_blob, Symbol("get-output-stream-blob")),
-    Lfunction(func_url_encode, Symbol("url-encode"))
+    Lfunction(func_url_encode, Symbol("url-encode")),
+
+    Lfunction(func_open_tcp_conn, Symbol("open-tcp-connection")),
+  Lfunction(func_open_http_conn, Symbol("open-http-connection")),
+    Lfunction(func_get_output_stream, Symbol("get-output-stream")),
+    Lfunction(func_get_input_stream, Symbol("get-input-stream")),
+
+    Lfunction(func_open_streamp, Symbol("open-stream-p")),
+    Lfunction(func_input_streamp, Symbol("input-stream-p")),
+    Lfunction(func_output_streamp, Symbol("output-stream-p"))
   )
 
 }
-
-/*
-abstract class Stream {
-
-  protected var closed = false
-  def isClosed = closed
-  def close: Unit
-  def canRead = reader != null
-  def canWrite = writer != null
-  def reader: BufferedReader
-  def writer: PrintStream
-
-  def checkForWrite(env: Env) {
-     if (!canWrite)
-       throw SyntaxError("Unable write to " + direction + " stream", env)
-     if (isClosed)
-       throw SyntaxError("The stream is closed", env)
-   }
-
-   def checkForRead(env: Env) {
-     if (!canRead)
-       throw SyntaxError("Unable read from " + direction + " stream", env)
-     if (isClosed)
-       throw SyntaxError("The stream is closed", env)
-   }
-
-  def direction = (reader, writer) match {
-    case (null, null) => 'failed
-    case (_, null) => 'input
-    case (null, _) => 'output
-    case _ => 'io
-  }
-
-}
-
-class BiStream(val reader: BufferedReader,
-                    val writer: PrintStream,
-                    val in: InputStream=null,
-                    val out: OutputStream =null) extends Stream {
-
-  def close {
-    closed = true
-    if (in != null) in.close
-    if (out != null) out.close
-    if (reader != null) reader.close
-    if (writer != null) writer.close
-  }
-}
-*/

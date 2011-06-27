@@ -338,10 +338,13 @@ object Env {
     Interop.all.foreach             { x => b += EnvEntry(x.name, x, true) }
 
 
-   val con = Lstream(Console.in, Console.out)
-   b += EnvEntry(Symbol("*standard-input*"), con, true)
-   b += EnvEntry(Symbol("*standard-output*"),con, true)
-   // b += (Symbol("*error-output*") -> con)
+  // val con = Lstream(Console.in, Console.out)
+  // b += EnvEntry(Symbol("*standard-input*"), con, true)
+  // b += EnvEntry(Symbol("*standard-output*"),con, true)
+  // b += (Symbol("*error-output*") -> con)
+
+    b += EnvEntry(Symbol("*standard-input*"),  Lstream(new StreamReadText(Console.in)), true)
+    b += EnvEntry(Symbol("*standard-output*"), Lstream(new StreamWriteText(Console.out)), true)
 
     new Env('global, null, b.result, host, null) {
       override protected def defineimpl(symbol: Symbol, value: Lcommon, mutable: Boolean) =

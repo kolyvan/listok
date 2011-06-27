@@ -220,7 +220,7 @@ object Concurrent {
       throw SyntaxError("Invalid number of argument: " + l.length, env)
     val p = l.head.castProcess(env)
     val out = p.process.getOutputStream
-    Lstream(null, new java.io.PrintStream(out), null, out)
+    Lstream(new StreamWriteText(new java.io.PrintStream(out)))
   }
 
   def func_process_input_stream(env: Env, l: List[Lcommon]): Lcommon = {
@@ -228,7 +228,7 @@ object Concurrent {
       throw SyntaxError("Invalid number of argument: " + l.length, env)
     val p = l.head.castProcess(env)
     val in = p.process.getInputStream
-    Lstream(Streams.bufferedReader(in), null, in, null)
+    Lstream(new StreamReadText(Streams.bufferedReader(in)))
   }
 
   def func_process_error_stream(env: Env, l: List[Lcommon]): Lcommon = {
@@ -236,7 +236,7 @@ object Concurrent {
       throw SyntaxError("Invalid number of argument: " + l.length, env)
     val p = l.head.castProcess(env)
     val in = p.process.getErrorStream
-    Lstream(Streams.bufferedReader(in), null, in, null)
+    Lstream(new StreamReadText(Streams.bufferedReader(in)))
   }
   ///
 

@@ -52,7 +52,7 @@ class StreamTest extends FunSuite with Helper {
     val l = listok
     l.eval("(def os (make-string-output-stream))")
     expect(Lkeyword('A)) {l.eval("(print :A os)")}
-    expect(Lstring("\n:A")) {l.eval("(get-output-stream-string os)")} // \n:A -
+    expect(Lstring(":A\n")) {l.eval("(get-output-stream-string os)")} // \n:A -
   }
 
   test("standart") {
@@ -103,29 +103,10 @@ class StreamTest extends FunSuite with Helper {
         len
         """)}
 
-  //  expect(Lnil)
-  //    {listok.eval(
-  //      """(open (string (current-directory) "/src/test/resources/no-such-file"))""")}
+    //expect(Lnil)
+    //  {listok.eval(
+    //    """(open (string (current-directory) "/src/test/resources/no-such-file"))""")}
   }
-
-  if (false)
-  test("socket") {
-      val l = listok
-      l.eval(
-      """
-      (def s (open-socket "lenta.ru" 80))
-      (write-line "HEAD / HTTP/1.0" s)
-      (write-line "Host: lenta.ru" s)
-      (terpri s)
-      (do
-        ((x "^^^^^^^^^^^^^^" (read-line s)))
-        ((not x))
-        (write-line x))
-      (close s)
-      """
-      )
-  }
-
 
   test("read byte") {
     val l = listok
@@ -146,7 +127,7 @@ class StreamTest extends FunSuite with Helper {
   test("write byte") {
     val l = listok
     l.eval("(def os (make-blob-output-stream))")
-    //peval(l, "(write-byte #\\a os)")
+   // peval(l, "(write-byte #\\a os)")
     expect(Lbyte('a')) {l.eval("(write-byte #\\a os)")}
     expect(Lbyte('b')) {l.eval("(write-byte #\\b os)")}
     expect(Lbyte('c')) {l.eval("(write-byte #\\c os)")}
@@ -161,4 +142,37 @@ class StreamTest extends FunSuite with Helper {
     expect(Lblob(Array(1.toByte, 2.toByte, 3.toByte)))
       {l.eval("(get-output-stream-blob os)")}
   }
+
+  test("predicats") {
+    val l = listok
+    l.eval("(def is (make-string-input-stream \"123\"))")
+    expect(Ltrue) {l.eval("(streamp is)")}
+    expect(Ltrue) {l.eval("(open-stream-p is)")}
+    expect(Ltrue) {l.eval("(input-stream-p is)")}
+    expect(Lnil) {l.eval("(output-stream-p is)")}
+    expect(Ltrue) {l.eval("(close is)")}
+    expect(Lnil) {l.eval("(open-stream-p is)")}
+  }
+
+  if (false)
+  test("socket") {
+      val l = listok
+      l.eval(
+      """
+      (def s (open-tcp-connection "lenta.ru" 80))
+      (print s)
+      (def out (get-output-stream s))
+      (def in  (get-input-stream s))
+      (write-line "HEAD / HTTP/1.0" out)
+      (write-line "Host: lenta.ru" out)
+      (newline out)
+      (do
+        ((x "^^^^^^^^^^^^^^" (read-line in)))
+        ((not x))
+        (write-line x))
+      (close s)
+      """
+      )
+  }
+
 }

@@ -19,16 +19,17 @@
 
 ;(print url)
 
-(let ((conn (open-url url)))
+(let ((conn (open-http-connection url)))
   (when conn
-    (let ((reply (read-text conn)))  
-      (close conn)
-      (let ((json (json-parse reply)))
-        ;(print json)
-        (def rd (hm-get json :responseData))
-        (if rd 
-          (display "%s\n" (hm-get rd :translatedText))
-          (display "%s\n" (hm-get json :responseDetails)))
-      ))))
+    (let ((in (get-input-stream conn)))
+      (let ((reply (read-text in)))  
+        (close conn)
+        (let ((json (json-parse reply)))
+          ;(print json)
+          (def rd (hm-get json :responseData))
+          (if rd 
+            (display "%s\n" (hm-get rd :translatedText))
+            (display "%s\n" (hm-get json :responseDetails)))
+      )))))
 
 

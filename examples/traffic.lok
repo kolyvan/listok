@@ -34,7 +34,8 @@
   (display "error, unable to run netstat\n")
   (exit))
 
-(def in (process-input-stream netstat))
+;(def in (process-input-stream netstat))
+(def in (get-input-stream netstat))
 (unless in
   (display "error, unable to get input-stream\n")
   (exit))

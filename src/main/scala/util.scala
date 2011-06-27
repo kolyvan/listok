@@ -24,8 +24,7 @@ package ru.listok
 import collection.mutable.ArraySeq
 import net.fyrie.ratio.Ratio
 import math.{ScalaNumber}
-import java.lang.String
-
+import java.io._
 
 object Util {
 
@@ -231,6 +230,10 @@ object Util {
     case b: Array[Byte] => Lblob(b)
     case a: Array[_] => toLvector(a:_*)
     case m: Map[_, _] => toLhashmap(m.toSeq :_*)
+    case reader: BufferedReader => Lstream(new StreamReadText(reader))
+    case writer: PrintStream => Lstream(new StreamWriteText(writer))
+    case in: InputStream => Lstream(new StreamReadBin(in))
+    case out: OutputStream => Lstream(new StreamWriteBin(out))
     case x: Lcommon => x
     case null => Lnil
     case _ => Lwrapper(x.asInstanceOf[AnyRef])

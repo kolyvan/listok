@@ -22,7 +22,7 @@ It's a Scala-based and need in scala-library.jar to run.
 - hashtable
 - stream 
 - regex
-- thread, mailslot, process
+- thread, mailslot, process, connection
 - function
 	
 
@@ -32,6 +32,7 @@ It's a Scala-based and need in scala-library.jar to run.
 - if, cond, do, and, or
 - spawn, match
 - collect
+- assert
 
 
 ## macro
@@ -49,7 +50,7 @@ It's a Scala-based and need in scala-library.jar to run.
 ### common
  
 - eq, not, eval, apply, load, exit, error, 
-- break, assert, trace, untrace
+- break, trace, untrace
 - curry, current-time, current-directory, json-parse
 - display, format 
 
@@ -83,7 +84,7 @@ It's a Scala-based and need in scala-library.jar to run.
  
 ### streams
 
-- open, open-socket, open-url, close,
+- open, open-tcp-connection, open-http-connection, close
 - read, read-byte, read-blob, read-char, read-text, read-line,
 - print, write, write-byte, write-blob, write-char, write-string, write-line,
 - terpri, newline,
@@ -91,6 +92,8 @@ It's a Scala-based and need in scala-library.jar to run.
 - make-blob-input-stream, make-blob-output-stream,
 - get-output-stream-string, get-output-stream-blob
 - url-encode
+- get-output-stream, get-input-stream
+- open-stream-p, input-stream-p, output-stream-p
    
 ### regex
 
@@ -175,7 +178,7 @@ It's a Scala-based and need in scala-library.jar to run.
 
 ## planned in nearest future
 
-- byte type and blobs
+- let*
 
 
 ## Build instructions
