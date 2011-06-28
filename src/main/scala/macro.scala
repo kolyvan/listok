@@ -28,6 +28,7 @@ object Macro {
     LL(Llambda(Nil, l, 'progn))
   }
 
+  /*
   def macro_let (env: Env, l: List[Lcommon]): Lcommon = {
      if (l.length < 1)
       throw SyntaxError("invalid number of elements in macro let: " + Util.pp(l), env)
@@ -60,6 +61,7 @@ object Macro {
 
     Llist(Llambda(ll.result, l.tail, 'let) :: args.result)
   }
+  */
 
   def macro_dotimes (env: Env, l: List[Lcommon]): Lcommon = {
     // (dotimes (n 10) l)
@@ -196,7 +198,7 @@ object Macro {
 
   val all = List (
     Lmacro(macro_progn _, 'progn),
-    Lmacro(macro_let _, 'let),
+//    Lmacro(macro_let _, 'let),
     Lmacro(macro_dotimes _, 'dotimes),
     Lmacro(macro_dowhile _, 'dowhile),
     Lmacro(macro_when _, 'when),

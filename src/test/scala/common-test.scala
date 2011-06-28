@@ -289,8 +289,10 @@ class CommonTest extends FunSuite {
     expect(Lint(9)){listok.eval("(let ((x 3) (y (+ 1 5))) (+ x y))")}
 
     intercept[SyntaxError]{listok.eval("(let (x 1) x)")}
-    intercept[SyntaxError]{listok.eval("(let)")}
+    intercept[SyntaxError]{listok.eval("(let 1)")}
     intercept[SyntaxError]{listok.eval("(let x)")}
+
+    intercept[UnboundSymbolError]{listok.eval("(let)")}
   }
 
   test("keyword") {

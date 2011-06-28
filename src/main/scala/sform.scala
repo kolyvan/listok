@@ -331,6 +331,49 @@ object SpecialForms {
       Llist(result)
   }
 
+  def form_let (env: Env, l: List[Lcommon]): Lcommon = {
+
+    if (l.length < 1)
+      throw SyntaxError("invalid number of elements in Let: " + Util.pp(l), env)
+
+    val e =  l.head match {
+      case Llist(Nil) =>
+        Env('let, env)
+
+      case Llist(xs) =>
+
+        val ll = List.newBuilder[Symbol]
+        val args = List.newBuilder[Lcommon]
+        ll.sizeHint(xs.length)
+        args.sizeHint(xs.length)
+
+        xs.foreach {
+          case Llist(xs) if xs.length == 1 =>
+            ll += xs.head.castSymbol(env).sym
+            args += Lnil
+
+          case Llist(xs) if xs.length == 2 =>
+            ll += xs.head.castSymbol(env).sym
+            args += xs.tail.head.eval(env)
+
+          case s: Lsymbol =>
+            ll += s.sym
+            args += Lnil
+
+          case _ => throw SyntaxError(" Malformed LET", env)
+        }
+
+        Env('let, env, ll.result, args.result)
+
+      case _ =>
+        throw SyntaxError(" Malformed LET", env)
+    }
+
+    Listok.eval(e, l.tail)
+  }
+
+  ///
+
   def make(name: Symbol) = name match {
     case 'def => Lsform(form_define _, name)
     case 'defconstant => Lsform(form_defconstant _, name)
@@ -346,6 +389,7 @@ object SpecialForms {
     case 'defstruct => Lsform(form_defstruct _, name)
     case 'assert => Lsform(form_assert _, name)
     case 'collect => Lsform(form_collect _, name)
+    case 'let => Lsform(form_let _, name)
     case _ => bugcheck("unable make unknown sform: " + name)
   }
 
