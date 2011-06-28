@@ -354,7 +354,7 @@ object SpecialForms {
 
           case Llist(xs) if xs.length == 2 =>
             ll += xs.head.castSymbol(env).sym
-            args += xs.tail.head.eval(env)
+            args += xs(1).eval(env)
 
           case s: Lsymbol =>
             ll += s.sym
@@ -364,6 +364,41 @@ object SpecialForms {
         }
 
         Env('let, env, ll.result, args.result)
+
+      case _ =>
+        throw SyntaxError(" Malformed LET", env)
+    }
+
+    Listok.eval(e, l.tail)
+  }
+
+  def form_let_sequential (env: Env, l: List[Lcommon]): Lcommon = {
+
+    if (l.length < 1)
+      throw SyntaxError("invalid number of elements in Let: " + Util.pp(l), env)
+
+    val e =  l.head match {
+      case Llist(Nil) =>
+        Env('let, env)
+
+      case Llist(xs) =>
+
+        val e = Env('let, env)
+
+        xs.foreach {
+          case Llist(xs) if xs.length == 1 =>
+            e.define(xs.head.castSymbol(env).sym, Lnil)
+
+          case Llist(xs) if xs.length == 2 =>
+            e.define(xs.head.castSymbol(env).sym, xs(1).eval(e))
+
+          case s: Lsymbol =>
+            e.define(s.sym, Lnil)
+
+          case _ => throw SyntaxError(" Malformed LET", env)
+        }
+
+        e
 
       case _ =>
         throw SyntaxError(" Malformed LET", env)
@@ -390,6 +425,7 @@ object SpecialForms {
     case 'assert => Lsform(form_assert _, name)
     case 'collect => Lsform(form_collect _, name)
     case 'let => Lsform(form_let _, name)
+    case Symbol("let*") => Lsform(form_let_sequential _, name)
     case _ => bugcheck("unable make unknown sform: " + name)
   }
 

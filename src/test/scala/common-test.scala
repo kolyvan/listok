@@ -434,6 +434,25 @@ class CommonTest extends FunSuite {
     //""")
   }
 
+  test("let*") {
+    expect(Lnil){listok.eval("(let* ())")}
+    expect(Lnil){listok.eval("(let* (x))")}
+    expect(Lnil){listok.eval("(let* (x) x)")}
+    expect(Lint(1)){listok.eval("(let* ((x 1)) x)")}
+    expect(LL(Lint(1), Lnil)){listok.eval("(let* ((x 1) z) (list x z))")}
+    expect(Lint(3)){listok.eval("(let* ((x 1) (z 2)) (+ x z))")}
+    expect(Ltrue){listok.eval("(let* () t)")}
+    expect(Lint(9)){listok.eval("(let* ((x 3) (y (+ 1 5))) (+ x y))")}
+
+    intercept[SyntaxError]{listok.eval("(let* (x 1) x)")}
+    intercept[SyntaxError]{listok.eval("(let* 1)")}
+    intercept[SyntaxError]{listok.eval("(let* x)")}
+
+    intercept[UnboundSymbolError]{listok.eval("(let*)")}
+
+    expect(Lint(2)){listok.eval("(let* ((x 1) (z (+ x 1))) z)")}
+    expect(LL(Lint(1), Lint(2))){listok.eval("(let* ((x 1) (z (+ x 1))) (list x z))")}
+  }
 
 }
 

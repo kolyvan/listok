@@ -39,7 +39,7 @@ object Parser extends JavaTokenParsers {
   lazy val str_lambda: Parser[String] = "lambda" | "\u03BB" //"λ" greek small letter lamda
   lazy val str_defmacro: Parser[String] = "defmacro"
 
-  lazy val sform_name = """(def|defun|defconstant|setf|if|cond|do|and|or|spawn|match|defstruct|assert|collect|let)\s+""".r
+  lazy val sform_name = """(def|defun|defconstant|setf|if|cond|do|and|or|spawn|match|defstruct|assert|collect|let|let\*)\s+""".r
 
   //symbol or number
   lazy val symbol: Parser[Lcommon] = regex_symbol ^^ {

@@ -21,8 +21,9 @@
 
 (let ((conn (open-http-connection url)))
   (when conn
-    (let ((in (get-input-stream conn)))
-      (let ((reply (read-text in)))  
+    (let* 
+      ((in (get-input-stream conn))
+       (reply (read-text in)))  
         (close conn)
         (let ((json (json-parse reply)))
           ;(print json)
@@ -30,6 +31,6 @@
           (if rd 
             (display "%s\n" (hm-get rd :translatedText))
             (display "%s\n" (hm-get json :responseDetails)))
-      )))))
+      ))))
 
 
