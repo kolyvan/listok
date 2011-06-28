@@ -28,7 +28,8 @@ It's a Scala-based and need in scala-library.jar to run.
 
 ## special forms
 
-- def, defconstant, defun, defstruct, setf, 
+- def, defconstant, defun, defstruct, setf,
+- let, let*
 - if, cond, do, and, or
 - spawn, match
 - collect
@@ -42,7 +43,7 @@ It's a Scala-based and need in scala-library.jar to run.
 		
 ## built-in macros
 	
-- progn, let, dotimes, doseq, dowhile, loop, when, unless
+- progn, dotimes, doseq, dowhile, loop, when, unless
 	
  
 ## built-in function
@@ -178,7 +179,7 @@ It's a Scala-based and need in scala-library.jar to run.
 
 ## planned in nearest future
 
-- let*
+- unwind-protect form and with-open macro
 
 
 ## Build instructions
@@ -201,3 +202,6 @@ To run examples:
 	cd examples
 	./queens.lok all
 	./gtranslate.lok en ru hello
+	./digest.lok digest.lok sha
+	./test.lok 256
+	./traffic.lok 100
