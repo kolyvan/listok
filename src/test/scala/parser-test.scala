@@ -274,5 +274,27 @@ class ParserTest extends FunSuite {
     expect(LL(Lsymbol(Symbol("quote-all"))))    {parse1("(quote-all)")}
   }
 
+  test("comment") {
+    try {
+      expect(Lnil)(parse1(";\n"))
+      expect(LL())(parse1("();\n"))
+      expect(Lnil)(parse1(";()\n"))
+      expect(LL(Lsymbol('+), Lint(1), Lint(2)))(parse1("(+  1 2);()\n"))
+      expect(Lnil)(parse1(" ;()\n"))
+      expect(Lnil)(parse1("\t;()\n"))
+      expect(LL())(parse1("\t();\n"))
+      expect(Lnil)(parse1(";()\n\t"))
+      expect(Lnil)(parse1("\t;()\n\t"))
+      expect(LL())(parse1("\t()\n;()\t\n\t"))
+      expect(Lnil)(parse1(
+        """
+        ;1
+        ;2
+        """))
+    }
+    catch {
+      case e => println(e)
+    }
+  }
 }
 

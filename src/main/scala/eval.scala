@@ -64,8 +64,8 @@ object Listok {
     eval(env, parse(text))
 
   def parse(text: String): List[Lcommon] = {
-    Parser.read(dropComments(text)) match {
-  //  Parser.read(text) match {
+  //  Parser.read(dropComments(text)) match {
+    Parser.read(text) match {
       case Right(l) => l
       case Left(msg) => throw ParserError(msg)
     }

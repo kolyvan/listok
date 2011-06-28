@@ -4,10 +4,9 @@ import _root_.ru.listok._
 import org.scalatest.FunSuite
 
 
-class EnvTest extends FunSuite {
+class EnvTest extends FunSuite with Helper {
 
-  def listok = new Listok
-
+//  def listok = new Listok
 
   test("def") {
     expect(Lint(42)){listok.eval("(def a 42) a")}

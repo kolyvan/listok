@@ -110,6 +110,8 @@ object Parser extends JavaTokenParsers {
    }
 
   //override protected val whiteSpace = """(\s+|;.*\n)""".r
+  //override protected val whiteSpace = """(\s+(;.*\s+)?|;.*\s+)+""".r
+  override protected val whiteSpace = """(\s+|\s*;.*\s+)+""".r
 
   lazy val prog: Parser[List[Lcommon]]   = (defmacro | form)*
 
