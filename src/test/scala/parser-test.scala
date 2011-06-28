@@ -275,7 +275,7 @@ class ParserTest extends FunSuite {
   }
 
   test("comment") {
-    try {
+    //try {
       expect(Lnil)(parse1(";\n"))
       expect(LL())(parse1("();\n"))
       expect(Lnil)(parse1(";()\n"))
@@ -291,10 +291,9 @@ class ParserTest extends FunSuite {
         ;1
         ;2
         """))
-    }
-    catch {
-      case e => println(e)
-    }
+      expect(Lstring(";"))(parse1("\";\"\n"))
+    expect(Lnil)(parse1(";\";\"\n"))
+    //}catch {case e => println(e)}
   }
 }
 
