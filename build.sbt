@@ -94,7 +94,7 @@ fork := true
 fork in Test := true
 
 // add a JVM option to use when forking a JVM for 'run'
-//javaOptions += "-Xmx2G"
+// javaOptions += "-Xmx2G"
 javaOptions += "-Xmx1G"
 
 // only use a single thread for building
@@ -106,10 +106,10 @@ parallelExecution in Test := false
 
 // set the location of the JDK to use for compiling Java code.
 // if 'fork' is true, this is used for 'run' as well
-javaHome := Some(file("/usr/local/jdk1.6.0"))
+// javaHome := Some(file("/usr/local/jdk1.6.0"))
 
 // Use Scala from a directory on the filesystem instead of retrieving from a repository
-scalaHome := Some(file("/usr/local/share/scala-2.9.0.1"))
+// scalaHome := Some(file("/usr/local/share/scala-2.9.0.1"))
 
 // don't aggregate clean (See FullConfiguration for aggregation details)
 aggregate in clean := false
@@ -130,7 +130,7 @@ persistLogLevel := Level.Debug
 traceLevel := 10
 
 // only show stack traces up to the first sbt stack frame
-traceLevel := 0
+// traceLevel := 0
 
 // add SWT to the unmanaged classpath
 //unmanagedJars in Compile += file("/usr/share/java/swt.jar")
@@ -150,4 +150,5 @@ artifactClassifier in packageDoc := Some("doc")
 //   lib_managed/ in the build root (not per-project).
 retrieveManaged := true
 
-
+//
+logBuffered in Test := false

@@ -31,7 +31,6 @@ import net.fyrie.ratio.Ratio
 abstract sealed class Lcommon extends Typecast {
   def eval(env: Env): Lcommon = this
   def pp: String  // pretty print
-  // def dump = pp
 }
 
 abstract class Lruntime extends Lcommon // non-persistent
@@ -195,7 +194,6 @@ case object Ltrue extends Latom {
 case class Lfunction(val fn: FuncCall, val name: Symbol) extends Latom {
   def lapply(env: Env, args: List[Lcommon]): Lcommon = fn(env, args)
   def pp = "#<function " + Util.pp(name) + ">"
-  // def dump = "#<function " + Util.pp(name) + " {" + this.hashCode() + "}>"
 }
 
 case class Lsform(val form: FuncCall, val name: Symbol) extends Latom {
