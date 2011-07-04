@@ -67,7 +67,8 @@ object Util {
     case _ => bugcheck("odd length list!")
   }
 
-  def pp(sym: Symbol) = sym.toString.substring(1)
+  // def pp(sym: Symbol) = sym.toString.substring(1)
+  def pp(sym: Symbol) = sym.name
 
   def ppcall(name: Symbol, args: List[Lcommon]) =
       "(" + pp(name) + args.foldLeft("")((s,p) => s + " " + p.pp) + ")"
